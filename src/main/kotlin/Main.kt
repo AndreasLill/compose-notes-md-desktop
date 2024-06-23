@@ -1,31 +1,23 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-
-@Composable
-@Preview
-fun App() {
-    var text by remember { mutableStateOf("Hello, World!") }
-
-    MaterialTheme {
-        Button(onClick = {
-            text = "Hello, Desktop!"
-        }) {
-            Text(text)
-        }
-    }
-}
+import androidx.compose.ui.window.rememberWindowState
+import model.ApplicationState
+import screen.EditorScreen
+import screen.WorkspaceScreen
 
 fun main() = application {
-    Window(onCloseRequest = ::exitApplication) {
-        App()
+    val appState = remember { ApplicationState() }
+    Window(onCloseRequest = ::exitApplication, title = appState.title, state = rememberWindowState(width = Dp(1200f), height = Dp(900f))) {
+        MaterialTheme {
+            if (appState.workspace.isBlank()) {
+                WorkspaceScreen(appState)
+            }
+            else {
+                EditorScreen(appState)
+            }
+        }
     }
 }
