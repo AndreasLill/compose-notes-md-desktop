@@ -5,8 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 class ApplicationState {
-    var screen by mutableStateOf(Screens.Workspace)
+    var screen by mutableStateOf(Screens.Main)
     var workspace by mutableStateOf("")
-    var note by mutableStateOf("")
-    var title by mutableStateOf("No Workspace Selected")
+    var file by mutableStateOf("")
+    var title by mutableStateOf("No Workspace Selected!")
 }

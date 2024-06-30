@@ -1,7 +1,6 @@
 package model
 
 enum class Screens {
-    Workspace,
-    Editor,
+    Main,
     Settings,
 }

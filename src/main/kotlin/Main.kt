@@ -5,19 +5,14 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import model.ApplicationState
-import screen.EditorScreen
-import screen.WorkspaceScreen
+import screen.MainScreen
+import theme.ColorScheme
 
 fun main() = application {
     val appState = remember { ApplicationState() }
     Window(onCloseRequest = ::exitApplication, title = appState.title, state = rememberWindowState(width = Dp(1200f), height = Dp(900f))) {
-        MaterialTheme {
-            if (appState.workspace.isBlank()) {
-                WorkspaceScreen(appState)
-            }
-            else {
-                EditorScreen(appState)
-            }
+        MaterialTheme(colors = ColorScheme.Default) {
+            MainScreen(appState)
         }
     }
 }
