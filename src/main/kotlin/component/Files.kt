@@ -1,20 +1,31 @@
 package component
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import java.io.File
+import model.DirectoryState
 
 @Composable
-fun Files(modifier: Modifier, workspace: String)  {
-    val files = remember(workspace) { derivedStateOf { File(workspace).listFiles()?.filter { it.extension == "md" } } }
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        files.value?.forEach { file ->
-            Text(file.name)
+fun Files(modifier: Modifier, workspace: String, callback: (file: String) -> Unit)  {
+    val state = remember(workspace) { DirectoryState(workspace) }
+    val directory = state.directory.collectAsState(null)
+
+    Column(modifier = modifier) {
+        directory.value?.forEach {
+            TextButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    callback(it.name)
+                },
+                content = {
+                    Text(it.name)
+                }
+            )
         }
     }
 }

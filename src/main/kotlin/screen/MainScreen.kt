@@ -2,7 +2,6 @@ package screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -20,8 +19,11 @@ fun MainScreen(appState: ApplicationState) {
         Row(modifier = Modifier.fillMaxSize()) {
             // Files & Workspace
             Box(modifier = Modifier.width(300.dp).fillMaxHeight().background(MaterialTheme.colors.background).padding(16.dp)) {
-                Files(modifier = Modifier.align(Alignment.TopCenter), workspace = appState.workspace)
-                Workspace(modifier = Modifier.align(Alignment.BottomCenter), workspace = appState.workspace) { workspace ->
+                Files(modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(), workspace = appState.workspace) { file ->
+                    appState.file = file
+                    appState.title = "${appState.workspace} - ${appState.file}"
+                }
+                Workspace(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(), workspace = appState.workspace) { workspace ->
                     appState.workspace = workspace
                     if (workspace.isBlank()) {
                         appState.title = "No Workspace Selected!"
@@ -34,7 +36,7 @@ fun MainScreen(appState: ApplicationState) {
             // Editor
             Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.surface).padding(16.dp)) {
                 if (appState.workspace.isNotBlank() && appState.file.isNotBlank()) {
-                    Editor()
+                    Editor(appState.workspace, appState.file)
                 }
             }
         }

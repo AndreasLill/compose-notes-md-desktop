@@ -9,10 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import model.FileState
 
 @Composable
-fun Editor() {
-    val text = remember { mutableStateOf("") }
+fun Editor(workspace: String, file: String) {
+    val state = remember { FileState() }
+    val text = remember(file) { mutableStateOf(state.readFile(workspace, file)) }
     BasicTextField(
         modifier = Modifier.fillMaxSize(),
         value = text.value,
