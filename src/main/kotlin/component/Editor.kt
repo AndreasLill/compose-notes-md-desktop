@@ -14,8 +14,8 @@ import model.ApplicationState
 @Composable
 fun Editor(appState: ApplicationState) {
     val originalText = remember(appState.file) { mutableStateOf(FileHandler.readFile(appState.file)) }
-    val text = remember(originalText.value) { mutableStateOf(originalText.value) }
-    val diff = remember(text.value) { derivedStateOf { originalText.value != text.value } }
+    val text = remember { mutableStateOf(originalText.value) }
+    val diff = remember(originalText.value, text.value) { derivedStateOf { originalText.value != text.value } }
 
     LaunchedEffect(diff.value) {
         if (diff.value) {
@@ -30,7 +30,7 @@ fun Editor(appState: ApplicationState) {
         if (appState.action == Action.Save) {
             FileHandler.saveFile(appState.file, text.value)
             appState.setAction(Action.None)
-            appState.setTitle(appState.title.removeSuffix("*"))
+            originalText.value = text.value
         }
     }
 
