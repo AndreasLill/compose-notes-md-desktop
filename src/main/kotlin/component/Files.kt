@@ -31,7 +31,7 @@ fun Files(modifier: Modifier, appState: ApplicationState)  {
                     Text(it.name)
                 },
                 colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = appState.file?.let { MaterialTheme.colors.primary.copy(alpha = 0.20f) } ?: Color.Transparent
+                    backgroundColor = if (appState.file == it) MaterialTheme.colors.primary.copy(alpha = 0.20f) else Color.Transparent
                 )
             )
         }
