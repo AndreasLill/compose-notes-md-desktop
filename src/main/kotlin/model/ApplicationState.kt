@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import java.io.File
 
 class ApplicationState {
-    var screen by mutableStateOf(Screens.Main)
+    var screen by mutableStateOf(Screen.Main)
         private set
     var workspace by mutableStateOf("")
         private set
@@ -18,7 +18,7 @@ class ApplicationState {
         private set
 
     @JvmName("jvmSetScreen")
-    fun setScreen(value: Screens) {
+    fun setScreen(value: Screen) {
         screen = value
     }
     @JvmName("jvmSetWorkspace")

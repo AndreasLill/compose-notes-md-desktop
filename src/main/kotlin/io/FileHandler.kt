@@ -1,9 +1,11 @@
-package model
+package io
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.File
 
-class FileState {
+object FileHandler {
     fun readFile(file: File?) = runBlocking {
         if (file == null)
             return@runBlocking ""

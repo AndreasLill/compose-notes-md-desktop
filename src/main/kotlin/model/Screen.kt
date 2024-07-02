@@ -1,6 +1,6 @@
 package model
 
-enum class Screens {
+enum class Screen {
     Main,
     Settings,
 }
