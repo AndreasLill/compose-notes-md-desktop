@@ -1,10 +1,26 @@
 package model
 
+import kotlinx.coroutines.*
 import java.io.File
-import kotlin.io.path.Path
 
 class FileState {
-    fun readFile(workspace: String, file: String): String {
-        return File(Path(workspace, file).toUri()).bufferedReader().readText()
+    fun readFile(file: File?) = runBlocking {
+        if (file == null)
+            return@runBlocking ""
+
+        withContext(Dispatchers.IO) {
+            return@withContext file.bufferedReader().readText()
+        }
+    }
+
+    fun saveFile(file: File?, data: String) = runBlocking {
+        file?.let {
+            withContext(Dispatchers.IO) {
+                val writer = it.bufferedWriter()
+                writer.write(data)
+                writer.flush()
+                println("saved file")
+            }
+        }
     }
 }

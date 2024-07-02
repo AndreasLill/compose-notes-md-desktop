@@ -17,26 +17,13 @@ import model.ApplicationState
 fun MainScreen(appState: ApplicationState) {
     Surface {
         Row(modifier = Modifier.fillMaxSize()) {
-            // Files & Workspace
             Box(modifier = Modifier.width(300.dp).fillMaxHeight().background(MaterialTheme.colors.background).padding(16.dp)) {
-                Files(modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(), workspace = appState.workspace) { file ->
-                    appState.file = file
-                    appState.title = "${appState.workspace} - ${appState.file}"
-                }
-                Workspace(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(), workspace = appState.workspace) { workspace ->
-                    appState.workspace = workspace
-                    if (workspace.isBlank()) {
-                        appState.title = "No Workspace Selected!"
-                    }
-                    else {
-                        appState.title = workspace
-                    }
-                }
+                Files(modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(), appState = appState)
+                Workspace(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(), appState = appState)
             }
-            // Editor
             Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.surface).padding(16.dp)) {
-                if (appState.workspace.isNotBlank() && appState.file.isNotBlank()) {
-                    Editor(appState.workspace, appState.file)
+                if (appState.workspace.isNotBlank() && appState.file != null) {
+                    Editor(appState)
                 }
             }
         }

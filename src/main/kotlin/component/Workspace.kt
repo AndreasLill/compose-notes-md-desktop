@@ -7,13 +7,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import com.darkrockstudios.libraries.mpfilepicker.DirectoryPicker
+import model.ApplicationState
 
 @Composable
-fun Workspace(modifier: Modifier, workspace: String, callback: (ws: String) -> Unit) {
+fun Workspace(modifier: Modifier, appState: ApplicationState) {
     var showPicker by remember { mutableStateOf(false) }
 
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        if (workspace.isBlank()) {
+        if (appState.workspace.isBlank()) {
             Text(
                 text = "No workspace selected!",
                 fontSize = 13.sp,
@@ -28,7 +29,7 @@ fun Workspace(modifier: Modifier, workspace: String, callback: (ws: String) -> U
                 showPicker = true
             },
             content = {
-                if (workspace.isBlank()) {
+                if (appState.workspace.isBlank()) {
                     Text("Select Workspace")
                 }
                 else {
@@ -38,7 +39,14 @@ fun Workspace(modifier: Modifier, workspace: String, callback: (ws: String) -> U
         )
         DirectoryPicker(showPicker) { path ->
             path?.let {
-                callback(it)
+                appState.setWorkspace(path)
+                appState.setFile(null)
+                if (path.isBlank()) {
+                    appState.setTitle("No Workspace Selected!")
+                }
+                else {
+                    appState.setTitle(path)
+                }
             }
             showPicker = false
         }
