@@ -9,9 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.sp
 import io.FileHandler
 import model.enums.Action
 import model.ApplicationState
@@ -47,6 +49,8 @@ fun Editor(appState: ApplicationState) {
         onValueChange = { text.value = it },
         textStyle = LocalTextStyle.current.copy(
             color = MaterialTheme.colors.primary,
+            fontSize = 14.sp,
+            fontFamily = FontFamily.Monospace
         ),
         cursorBrush = SolidColor(MaterialTheme.colors.primary),
         visualTransformation = {
