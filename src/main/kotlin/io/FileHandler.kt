@@ -11,6 +11,7 @@ object FileHandler {
             return@runBlocking ""
 
         withContext(Dispatchers.IO) {
+            println("read file")
             return@withContext file.bufferedReader().readText()
         }
     }

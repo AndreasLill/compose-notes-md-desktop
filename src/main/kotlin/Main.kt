@@ -4,7 +4,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import io.HotKeyHandler
+import input.ShortcutHandler
 import model.ApplicationState
 import screen.MainScreen
 import theme.ColorScheme
@@ -16,7 +16,7 @@ fun main() = application {
         title = appState.title,
         state = rememberWindowState(width = 1200.dp, height = 900.dp),
         onKeyEvent = {
-            HotKeyHandler.event(appState, it)
+            ShortcutHandler.event(appState, it)
         },
         content = {
             MaterialTheme(colors = ColorScheme.Default) {

@@ -1,10 +1,10 @@
-package io
+package input
 
 import androidx.compose.ui.input.key.*
 import model.Action
 import model.ApplicationState
 
-object HotKeyHandler {
+object ShortcutHandler {
     fun event(appState: ApplicationState, keyEvent: KeyEvent): Boolean {
         when {
             keyEvent.isCtrlPressed && keyEvent.key == Key.S && keyEvent.type == KeyEventType.KeyDown && appState.file != null -> {

@@ -58,6 +58,9 @@ fun Editor(appState: ApplicationState) {
     )
 }
 
+/**
+ * Translates markdown source text to annotated string format used by text field.
+ */
 fun markdownAnnotatedString(state: EditorState, text: String): AnnotatedString {
     val builder = AnnotatedString.Builder()
     val lines = text.lines()
@@ -84,6 +87,9 @@ fun markdownAnnotatedString(state: EditorState, text: String): AnnotatedString {
     return builder.toAnnotatedString()
 }
 
+/**
+ * Builds annotated string with provided style and handles line breaks.
+ */
 fun buildLine(builder: AnnotatedString.Builder, style: SpanStyle, text: String, breakLine: Boolean = false) {
     builder.withStyle(style) {
         append(text)
@@ -93,6 +99,9 @@ fun buildLine(builder: AnnotatedString.Builder, style: SpanStyle, text: String, 
     }
 }
 
+/**
+ * Checks if the current index is the last.
+ */
 fun isLastLine(index: Int, size: Int): Boolean {
     return index == size - 1
 }
