@@ -6,17 +6,20 @@ import androidx.compose.ui.graphics.Color
 object ColorScheme {
     val Default = Colors(
         primary = Color(0xFFa6da95),
-        onPrimary = Color(0xFF24273a),
         secondary = Color(0xFFa6da95),
-        onSecondary = Color(0xFF24273a),
-        surface = Color(0xFF363a4f),
-        onSurface = Color(0xFFcad3f5),
-        background = Color(0xFF24273a),
-        onBackground = Color(0xFFcad3f5),
-        error = Color(0xFFed8796),
-        onError = Color(0xFF24273a),
         primaryVariant = Color(0xFFa6da95),
         secondaryVariant = Color(0xFFa6da95),
+
+        surface = Color(0xFF313244),
+        background = Color(0xFF1e1e2e),
+        error = Color(0xFFed8796),
+
+        onPrimary = Color(0xFF24273a),
+        onSecondary = Color(0xFF24273a),
+        onError = Color(0xFF24273a),
+        onSurface = Color(0xFFcad3f5),
+        onBackground = Color(0xFFcad3f5),
+
         isLight = false
     )
 }
