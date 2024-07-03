@@ -5,14 +5,18 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import input.ShortcutHandler
+import io.SaveHandler
 import model.ApplicationState
 import screen.MainScreen
 import theme.ColorScheme
 
 fun main() = application {
-    val appState = remember { ApplicationState() }
+    val appState = remember { SaveHandler.loadState() }
     Window(
-        onCloseRequest = ::exitApplication,
+        onCloseRequest = {
+            SaveHandler.saveState(appState)
+            exitApplication()
+        },
         title = appState.title,
         state = rememberWindowState(width = 1200.dp, height = 900.dp),
         onKeyEvent = {

@@ -1,8 +1,8 @@
 package input
 
 import androidx.compose.ui.input.key.*
-import model.Action
 import model.ApplicationState
+import model.enums.Action
 
 object ShortcutHandler {
     fun event(appState: ApplicationState, keyEvent: KeyEvent): Boolean {

@@ -12,16 +12,18 @@ object FileHandler {
 
         withContext(Dispatchers.IO) {
             println("read file")
-            return@withContext file.bufferedReader().readText()
+            file.bufferedReader().use {
+                return@withContext it.readText()
+            }
         }
     }
 
     fun saveFile(file: File?, data: String) = runBlocking {
         file?.let {
             withContext(Dispatchers.IO) {
-                val writer = it.bufferedWriter()
-                writer.write(data)
-                writer.flush()
+                it.bufferedWriter().use {
+                    it.write(data)
+                }
                 println("saved file")
             }
         }

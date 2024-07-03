@@ -1,4 +1,4 @@
-package model
+package model.enums
 
 enum class Action {
     None,

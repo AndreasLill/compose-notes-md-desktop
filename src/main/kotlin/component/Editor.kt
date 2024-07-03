@@ -13,7 +13,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.withStyle
 import io.FileHandler
-import model.Action
+import model.enums.Action
 import model.ApplicationState
 import model.EditorState
 

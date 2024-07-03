@@ -3,6 +3,8 @@ package model
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import model.enums.Action
+import model.enums.Screen
 import java.io.File
 
 class ApplicationState {
