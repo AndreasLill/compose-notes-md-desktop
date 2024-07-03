@@ -28,17 +28,17 @@ fun Editor(appState: ApplicationState) {
 
     LaunchedEffect(diff.value) {
         if (diff.value) {
-            appState.setTitle(appState.title.plus("*"))
+            appState.title = appState.title.plus("*")
         }
         else {
-            appState.setTitle(appState.title.removeSuffix("*"))
+            appState.title = appState.title.removeSuffix("*")
         }
     }
 
     LaunchedEffect(appState.action) {
         if (appState.action == Action.Save) {
             FileHandler.saveFile(appState.file, text.value)
-            appState.setAction(Action.None)
+            appState.action = Action.None
             originalText.value = text.value
         }
     }

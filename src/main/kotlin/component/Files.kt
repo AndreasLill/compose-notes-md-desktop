@@ -24,8 +24,8 @@ fun Files(modifier: Modifier, appState: ApplicationState)  {
             TextButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    appState.setFile(it)
-                    appState.setTitle("${appState.workspace} - ${appState.file?.name}")
+                    appState.file = it
+                    appState.title = "${appState.workspace} - ${appState.file?.name}"
                 },
                 content = {
                     Text(it.name)

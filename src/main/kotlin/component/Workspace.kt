@@ -39,13 +39,13 @@ fun Workspace(modifier: Modifier, appState: ApplicationState) {
         )
         DirectoryPicker(showPicker) { path ->
             path?.let {
-                appState.setWorkspace(path)
-                appState.setFile(null)
+                appState.workspace = path
+                appState.file = null
                 if (path.isBlank()) {
-                    appState.setTitle("No Workspace Selected!")
+                    appState.title = "No Workspace Selected!"
                 }
                 else {
-                    appState.setTitle(path)
+                    appState.title = path
                 }
             }
             showPicker = false
