@@ -18,9 +18,9 @@ import model.ApplicationState
 fun MainScreen(appState: ApplicationState) {
     Surface {
         Row(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.width(300.dp).fillMaxHeight().background(MaterialTheme.colors.background).padding(16.dp)) {
+            Column(modifier = Modifier.width(300.dp).fillMaxHeight().background(MaterialTheme.colors.background)) {
                 WorkspaceControls(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     appState = appState
                 )
                 if (appState.workspace.isNotBlank()) {

@@ -16,7 +16,7 @@ fun main() = application {
         },
         title = appState.title,
         state = appState.windowState,
-        onKeyEvent = {
+        onPreviewKeyEvent = {
             ShortcutHandler.event(appState, it)
         },
         content = {

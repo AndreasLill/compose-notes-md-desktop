@@ -12,6 +12,7 @@ import com.example.composenotesmd.desktop.composenotesmd.generated.resources.cre
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.note_add_24dp
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.sync_24dp
 import model.ApplicationState
+import model.enums.Action
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -20,7 +21,7 @@ fun WorkspaceControls(modifier: Modifier, appState: ApplicationState) {
         Row(modifier = Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onClick = {
-                    println("new file")
+                    appState.action = Action.NewFile
                 },
                 content = {
                     Icon(

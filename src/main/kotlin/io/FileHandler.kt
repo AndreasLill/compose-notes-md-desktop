@@ -1,31 +1,37 @@
 package io
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.File
 
 object FileHandler {
-    fun readFile(file: File?) = runBlocking {
-        if (file == null)
-            return@runBlocking ""
-
+    fun readFile(file: File?): String = runBlocking {
         withContext(Dispatchers.IO) {
-            println("read file")
-            file.bufferedReader().use {
-                return@withContext it.readText()
+            if (file == null)
+                return@withContext ""
+
+            println("Read file ${file.name}")
+            file.bufferedReader().use { reader ->
+                val str = reader.readText()
+                return@withContext str
             }
         }
     }
 
     fun saveFile(file: File?, data: String) = runBlocking {
-        file?.let {
-            withContext(Dispatchers.IO) {
-                it.bufferedWriter().use {
-                    it.write(data)
+        withContext(Dispatchers.IO) {
+            file?.let { file ->
+                file.bufferedWriter().use { writer ->
+                    writer.write(data)
                 }
-                println("saved file")
+                println("Saved file ${file.name}")
             }
+        }
+    }
+
+    fun createFile(workspace: String, name: String) = runBlocking {
+        withContext(Dispatchers.IO) {
+            File("$workspace/$name.md").createNewFile()
+            println("Created file $name.md")
         }
     }
 }
