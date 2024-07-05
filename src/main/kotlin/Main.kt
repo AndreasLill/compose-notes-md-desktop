@@ -4,17 +4,25 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import input.ShortcutHandler
 import io.SaveHandler
-import screen.MainScreen
+import ui.screen.MainScreen
 import theme.ColorScheme
 
 fun main() = application {
     val appState = remember { SaveHandler.loadState() }
+    val windowTitle = remember(appState.workspace, appState.file) {
+        when {
+            (appState.workspace.isNotBlank() && appState.file != null) -> "Compose Notes - ${appState.workspace} - ${appState.file?.name}"
+            (appState.workspace.isNotBlank() && appState.file == null) -> "Compose Notes - ${appState.workspace}"
+            else -> "Compose Notes - Select a workspace!"
+        }
+    }
+
     Window(
         onCloseRequest = {
             SaveHandler.saveState(appState)
             exitApplication()
         },
-        title = appState.title,
+        title = windowTitle,
         state = appState.windowState,
         onPreviewKeyEvent = {
             ShortcutHandler.event(appState, it)

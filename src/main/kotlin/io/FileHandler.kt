@@ -4,34 +4,36 @@ import kotlinx.coroutines.*
 import java.io.File
 
 object FileHandler {
-    fun readFile(file: File?): String = runBlocking {
-        withContext(Dispatchers.IO) {
-            if (file == null)
-                return@withContext ""
+    suspend fun readFile(file: File?): String = withContext(Dispatchers.IO) {
+        if (file == null)
+            return@withContext ""
 
-            println("Read file ${file.name}")
-            file.bufferedReader().use { reader ->
-                val str = reader.readText()
-                return@withContext str
-            }
+        println("Read file ${file.name}")
+
+        file.bufferedReader().use { reader ->
+            val str = reader.readText()
+            return@withContext str
         }
     }
 
-    fun saveFile(file: File?, data: String) = runBlocking {
-        withContext(Dispatchers.IO) {
-            file?.let { file ->
-                file.bufferedWriter().use { writer ->
-                    writer.write(data)
-                }
-                println("Saved file ${file.name}")
+    suspend fun saveFile(file: File?, data: String) = withContext(Dispatchers.IO) {
+        file?.let { file ->
+            file.bufferedWriter().use { writer ->
+                writer.write(data)
             }
+            println("Saved file ${file.name}")
         }
     }
 
-    fun createFile(workspace: String, name: String) = runBlocking {
-        withContext(Dispatchers.IO) {
-            File("$workspace/$name.md").createNewFile()
+    suspend fun createFile(workspace: String, name: String): File? = withContext(Dispatchers.IO) {
+        val success = File("$workspace/$name.md").createNewFile()
+
+        if (success) {
             println("Created file $name.md")
+            return@withContext File("$workspace/$name.md")
         }
+
+        println("Could not create file $name.md - already exists")
+        return@withContext null
     }
 }

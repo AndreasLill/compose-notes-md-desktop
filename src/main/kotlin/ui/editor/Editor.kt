@@ -1,4 +1,4 @@
-package component
+package ui.editor
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.BasicTextField
@@ -15,23 +15,31 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import io.FileHandler
-import model.enums.Action
+import kotlinx.coroutines.runBlocking
 import model.ApplicationState
 import model.EditorState
+import model.enums.Action
+import java.io.File
 
 @Composable
 fun Editor(appState: ApplicationState) {
     val state = remember { EditorState() }
-    val originalText = remember(appState.file) { mutableStateOf(FileHandler.readFile(appState.file)) }
+    val originalText = remember(appState.file) {
+        mutableStateOf(
+            readFile(appState.file)
+        )
+    }
     val text = remember(originalText.value) { mutableStateOf(originalText.value) }
     val diff = remember(originalText.value, text.value) { derivedStateOf { originalText.value != text.value } }
 
     LaunchedEffect(diff.value) {
         if (diff.value) {
-            appState.title = appState.title.plus("*")
+            // TODO: Set * for unsaved.
+            //appState.title = appState.title.plus("*")
         }
         else {
-            appState.title = appState.title.removeSuffix("*")
+            // TODO: Remove * for unsaved.
+            //appState.title = appState.title.removeSuffix("*")
         }
     }
 
@@ -108,4 +116,8 @@ fun buildLine(builder: AnnotatedString.Builder, style: SpanStyle, text: String, 
  */
 fun isLastLine(index: Int, size: Int): Boolean {
     return index == size - 1
+}
+
+fun readFile(file: File?): String = runBlocking {
+    return@runBlocking FileHandler.readFile(file)
 }

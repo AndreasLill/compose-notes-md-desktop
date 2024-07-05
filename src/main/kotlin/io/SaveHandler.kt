@@ -16,19 +16,24 @@ object SaveHandler {
 
     fun saveState(appState: ApplicationState) = runBlocking {
         withContext(Dispatchers.IO) {
-            val file = File(PATH)
-            file.parentFile.mkdirs()
-            file.createNewFile()
+            val configFile = File(PATH)
+            configFile.parentFile.mkdirs()
+            configFile.createNewFile()
 
             val builder = StringBuilder()
-            builder.appendLine("workspace=${appState.workspace}")
-            builder.appendLine("file=${appState.file}")
-            builder.appendLine("window_width=${appState.windowState.size.width.value.toInt()}")
-            builder.appendLine("window_height=${appState.windowState.size.height.value.toInt()}")
-            builder.appendLine("window_pos_x=${appState.windowState.position.x.value.toInt()}")
-            builder.appendLine("window_pos_y=${appState.windowState.position.y.value.toInt()}")
-
-            file.bufferedWriter().use {
+            appState.workspace.let {
+                builder.appendLine("workspace=$it")
+            }
+            appState.file?.let {
+                builder.appendLine("file=$it")
+            }
+            appState.windowState.let {
+                builder.appendLine("window_width=${it.size.width.value.toInt()}")
+                builder.appendLine("window_height=${it.size.height.value.toInt()}")
+                builder.appendLine("window_pos_x=${it.position.x.value.toInt()}")
+                builder.appendLine("window_pos_y=${it.position.y.value.toInt()}")
+            }
+            configFile.bufferedWriter().use {
                 it.write(builder.toString())
             }
             println("Saved state")
@@ -36,8 +41,8 @@ object SaveHandler {
     }
 
     fun loadState(): ApplicationState {
-        val file = File(PATH)
         try {
+            val configFile = File(PATH)
             val appState = ApplicationState()
             val lines: List<String>
 
@@ -46,7 +51,7 @@ object SaveHandler {
             var windowPosX = 0
             var windowPosY = 0
 
-            file.bufferedReader().use {
+            configFile.bufferedReader().use {
                 lines = it.readLines()
             }
 
@@ -57,7 +62,12 @@ object SaveHandler {
 
                 when(key) {
                     "workspace" -> appState.workspace = value
-                    "file" -> appState.file = File(value)
+                    "file" -> {
+                        File(value).let { file ->
+                            if (file.exists())
+                                appState.file = file
+                        }
+                    }
                     "window_width" -> windowWidth = value.toInt()
                     "window_height" -> windowHeight = value.toInt()
                     "window_pos_x" -> windowPosX = value.toInt()
@@ -69,7 +79,6 @@ object SaveHandler {
                 size = DpSize(windowWidth.dp, windowHeight.dp),
                 position = WindowPosition(windowPosX.dp, windowPosY.dp)
             )
-            appState.title = "${appState.workspace} - ${appState.file?.name}"
             return appState
         }
         catch (e: Exception) {
