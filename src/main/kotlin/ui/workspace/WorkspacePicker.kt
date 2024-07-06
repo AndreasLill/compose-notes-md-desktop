@@ -9,31 +9,42 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.darkrockstudios.libraries.mpfilepicker.DirectoryPicker
 import model.ApplicationState
+import model.enums.Action
 
 @Composable
 fun WorkspacePicker(appState: ApplicationState) {
-    var showPicker by remember { mutableStateOf(false) }
+    var showPicker = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        appState.event.collect {
+            if (it == Action.ChangeWorkspace) {
+                showPicker.value = true
+            }
+        }
+    }
 
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Button(
-            onClick = {
-                showPicker = true
-            },
-            content = {
-                if (appState.workspace.isBlank()) {
-                    Text("Select Workspace")
+        if (appState.workspace.isBlank()) {
+            Button(
+                onClick = {
+                    showPicker.value = true
+                },
+                content = {
+                    if (appState.workspace.isBlank()) {
+                        Text("Select Workspace")
+                    }
+                    else {
+                        Text("Change Workspace")
+                    }
                 }
-                else {
-                    Text("Change Workspace")
-                }
-            }
-        )
-        DirectoryPicker(showPicker) { path ->
+            )
+        }
+        DirectoryPicker(showPicker.value) { path ->
             path?.let {
                 appState.workspace = path
                 appState.file = null
             }
-            showPicker = false
+            showPicker.value = false
         }
     }
 }
