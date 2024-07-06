@@ -6,15 +6,15 @@ import kotlin.io.path.Path
 
 object FileHandler {
     suspend fun readFile(file: File?): String = withContext(Dispatchers.IO) {
-        if (file == null)
-            return@withContext ""
-
-        println("Read file ${file.name}")
-
-        file.bufferedReader().use { reader ->
-            val str = reader.readText()
-            return@withContext str
+        file?.let { file ->
+            file.bufferedReader().use { reader ->
+                val str = reader.readText()
+                println("Read file ${file.name}")
+                return@withContext str
+            }
         }
+
+        return@withContext ""
     }
 
     suspend fun saveFile(file: File?, data: String) = withContext(Dispatchers.IO) {
@@ -26,16 +26,18 @@ object FileHandler {
         }
     }
 
-    suspend fun createFile(workspace: String, name: String): File? = withContext(Dispatchers.IO) {
-        val success = File("$workspace/$name.md").createNewFile()
+    suspend fun createFile(workspace: File?, name: String): File? = withContext(Dispatchers.IO) {
+        workspace?.let { workspace ->
+            val success = File("$workspace/$name.md").createNewFile()
 
-        if (success) {
-            println("Created file $name.md")
-            return@withContext File("$workspace/$name.md")
+            if (success) {
+                println("Created file $name.md")
+                return@withContext File("$workspace/$name.md")
+            }
+
+            println("Could not create file $name.md - already exists")
+            return@withContext null
         }
-
-        println("Could not create file $name.md - already exists")
-        return@withContext null
     }
 
     suspend fun deleteFile(file: File): Boolean = withContext(Dispatchers.IO) {

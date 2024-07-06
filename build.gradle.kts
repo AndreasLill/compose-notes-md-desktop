@@ -27,8 +27,9 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "MainKt"
-
         nativeDistributions {
+            // sun/misc/unsafe
+            modules("jdk.unsupported")
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.AppImage)
             packageName = "ComposeNotesMD"
             packageVersion = "1.0.0"

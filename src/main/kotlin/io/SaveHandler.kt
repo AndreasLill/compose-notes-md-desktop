@@ -21,7 +21,7 @@ object SaveHandler {
             configFile.createNewFile()
 
             val builder = StringBuilder()
-            appState.workspace.let {
+            appState.workspace?.let {
                 builder.appendLine("workspace=$it")
             }
             appState.file?.let {
@@ -61,7 +61,12 @@ object SaveHandler {
                 val value = pair[1]
 
                 when(key) {
-                    "workspace" -> appState.workspace = value
+                    "workspace" -> {
+                        File(value).let { file ->
+                            if (file.exists())
+                                appState.workspace = file
+                        }
+                    }
                     "file" -> {
                         File(value).let { file ->
                             if (file.exists())

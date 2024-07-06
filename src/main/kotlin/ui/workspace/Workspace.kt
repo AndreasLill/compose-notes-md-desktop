@@ -8,7 +8,7 @@ fun Workspace(appState: ApplicationState) {
     WorkspacePanel(
         appState = appState
     )
-    if (appState.workspace.isNotBlank()) {
+    if (appState.workspace != null) {
         FileViewer(
             appState = appState
         )

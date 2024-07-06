@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import com.darkrockstudios.libraries.mpfilepicker.DirectoryPicker
 import model.ApplicationState
 import model.enums.Action
+import java.io.File
 
 @Composable
 fun WorkspacePicker(appState: ApplicationState) {
@@ -24,7 +25,7 @@ fun WorkspacePicker(appState: ApplicationState) {
     }
 
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        if (appState.workspace.isBlank()) {
+        if (appState.workspace == null) {
             Button(
                 onClick = {
                     showPicker.value = true
@@ -36,7 +37,7 @@ fun WorkspacePicker(appState: ApplicationState) {
         }
         DirectoryPicker(showPicker.value) { path ->
             path?.let {
-                appState.workspace = path
+                appState.workspace = File(path)
                 appState.file = null
             }
             showPicker.value = false

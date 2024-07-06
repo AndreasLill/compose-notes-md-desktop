@@ -12,8 +12,8 @@ fun main() = application {
     val appState = remember { SaveHandler.loadState() }
     val windowTitle = remember(appState.workspace, appState.file) {
         when {
-            (appState.workspace.isNotBlank() && appState.file != null) -> "Compose Notes - ${appState.workspace} - ${appState.file?.name}"
-            (appState.workspace.isNotBlank() && appState.file == null) -> "Compose Notes - ${appState.workspace}"
+            (appState.workspace != null && appState.file != null) -> "Compose Notes - ${appState.workspace} - ${appState.file?.name}"
+            (appState.workspace != null && appState.file == null) -> "Compose Notes - ${appState.workspace}"
             else -> "Compose Notes - Select a workspace!"
         }
     }

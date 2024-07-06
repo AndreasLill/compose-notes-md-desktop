@@ -52,7 +52,7 @@ fun FileViewer(appState: ApplicationState)  {
 
         println("Workspace polling started.")
         while (true) {
-            val temp = File(appState.workspace).listFiles()?.filter { it.extension == "md" }?.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+            val temp = appState.workspace?.listFiles()?.filter { it.extension == "md" }?.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
             temp?.let {
                 if (directory.value != it) {
                     directory.value = it
@@ -125,12 +125,13 @@ fun FileViewer(appState: ApplicationState)  {
 
         directory.value?.forEach { file ->
             val renameFileFocusRequester = remember { FocusRequester() }
+            val selected = (appState.file == file && !createFile.value)
             ContextMenuArea(
                 items = {
                     listOf(
                         ContextMenuItem("Open In Explorer") {
                             val desktop = Desktop.getDesktop()
-                            desktop.open(File(appState.workspace))
+                            desktop.open(appState.workspace)
                         },
                         ContextMenuItem("Rename") {
                             renameFileName.value = file.name
@@ -158,7 +159,7 @@ fun FileViewer(appState: ApplicationState)  {
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp).clickable {
                             appState.file = file
                         },
-                        backgroundColor = if (appState.file == file && !createFile.value) MaterialTheme.colors.primary.copy(0.10f) else Color.Transparent,
+                        backgroundColor = if (selected) MaterialTheme.colors.primary.copy(0.10f) else Color.Transparent,
                         shape = RoundedCornerShape(2.dp),
                         elevation = 0.dp,
                         content = {
@@ -166,6 +167,7 @@ fun FileViewer(appState: ApplicationState)  {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     painter = painterResource(Res.drawable.description_24dp),
+                                    tint = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
                                     contentDescription = null
                                 )
                                 if (file.name == renameFileName.value) {
@@ -202,7 +204,8 @@ fun FileViewer(appState: ApplicationState)  {
                                     Text(
                                         text = file.nameWithoutExtension,
                                         fontSize = 13.sp,
-                                        fontWeight = FontWeight.Normal
+                                        fontWeight = FontWeight.Normal,
+                                        color = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
                                     )
                                 }
                             }

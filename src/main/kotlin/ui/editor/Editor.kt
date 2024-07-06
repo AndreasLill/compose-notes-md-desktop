@@ -52,7 +52,7 @@ fun Editor(appState: ApplicationState) {
         modifier = Modifier.fillMaxSize(),
         value = text.value,
         onValueChange = { text.value = it },
-        enabled = appState.workspace.isNotBlank() && appState.file != null,
+        enabled = appState.workspace != null && appState.file != null,
         textStyle = LocalTextStyle.current.copy(
             color = MaterialTheme.colors.primary,
             fontSize = 14.sp,

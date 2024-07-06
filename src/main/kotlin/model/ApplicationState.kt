@@ -11,7 +11,7 @@ import java.io.File
 
 class ApplicationState {
     var screen by mutableStateOf(Screen.Main)
-    var workspace by mutableStateOf("")
+    var workspace by mutableStateOf<File?>(null)
     var file by mutableStateOf<File?>(null)
     var windowState by mutableStateOf(WindowState())
     val event = MutableSharedFlow<Action>()
