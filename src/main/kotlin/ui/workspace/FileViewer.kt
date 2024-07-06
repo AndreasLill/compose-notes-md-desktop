@@ -1,7 +1,6 @@
 package ui.workspace
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -58,7 +57,6 @@ fun FileViewer(appState: ApplicationState)  {
         appState.event.collect {
             if (it == Action.NewFile) {
                 tempNewFile.value = true
-                appState.file = null
                 delay(100)
                 try {
                     focusRequester.requestFocus()
@@ -115,27 +113,44 @@ fun FileViewer(appState: ApplicationState)  {
         }
 
         directory.value?.forEach {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp).clickable {
-                    appState.file = it
+            ContextMenuArea(
+                items = {
+                    listOf(
+                        ContextMenuItem("Delete") {
+                            scope.launch {
+                                FileHandler.deleteFile(it).let { success ->
+                                    if (success) {
+                                        refreshPoll.value = true
+                                    }
+                                }
+                            }
+                        }
+                    )
                 },
-                backgroundColor = if (appState.file == it && !tempNewFile.value) MaterialTheme.colors.primary.copy(alpha = 0.20f) else Color.Transparent,
-                shape = RoundedCornerShape(2.dp),
-                elevation = 0.dp,
                 content = {
-                    Row(modifier = Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            painter = painterResource(Res.drawable.description_24dp),
-                            contentDescription = null
-                        )
-                        Text(
-                            text = it.nameWithoutExtension,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Normal
-                        )
-                    }
-                },
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp).clickable {
+                            appState.file = it
+                        },
+                        backgroundColor = if (appState.file == it && !tempNewFile.value) MaterialTheme.colors.primary.copy(alpha = 0.20f) else Color.Transparent,
+                        shape = RoundedCornerShape(2.dp),
+                        elevation = 0.dp,
+                        content = {
+                            Row(modifier = Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Icon(
+                                    modifier = Modifier.size(20.dp),
+                                    painter = painterResource(Res.drawable.description_24dp),
+                                    contentDescription = null
+                                )
+                                Text(
+                                    text = it.nameWithoutExtension,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Normal
+                                )
+                            }
+                        },
+                    )
+                }
             )
         }
     }

@@ -36,4 +36,9 @@ object FileHandler {
         println("Could not create file $name.md - already exists")
         return@withContext null
     }
+
+    suspend fun deleteFile(file: File): Boolean = withContext(Dispatchers.IO) {
+        println("Deleted file ${file.name}")
+        return@withContext file.delete()
+    }
 }
