@@ -24,18 +24,35 @@ import io.FileHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import model.ApplicationState
-import model.DirectoryState
 import model.enums.Action
 import org.jetbrains.compose.resources.painterResource
+import java.io.File
 
 @Composable
 fun FileViewer(appState: ApplicationState)  {
-    val state = remember(appState.workspace) { DirectoryState(appState.workspace) }
-    val directory = state.directory.collectAsState(null)
+    val directory = remember { mutableStateOf<List<File>?>(null) }
+    val refreshPoll = remember(appState.workspace) { mutableStateOf(false) }
     val tempFileName = remember { mutableStateOf("") }
     val tempNewFile = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(refreshPoll.value) {
+        if (refreshPoll.value) {
+            refreshPoll.value = false
+            return@LaunchedEffect
+        }
+
+        println("Workspace polling started.")
+        while (true) {
+            val temp = File(appState.workspace).listFiles()?.filter { it.extension == "md" }?.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+            temp?.let {
+                directory.value = it
+            }
+            println("${appState.workspace} polled.")
+            delay(1000)
+        }
+    }
 
     LaunchedEffect(appState.workspace) {
         appState.event.collect {
@@ -69,6 +86,7 @@ fun FileViewer(appState: ApplicationState)  {
                                 if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
                                     scope.launch {
                                         appState.file = FileHandler.createFile(appState.workspace, tempFileName.value)
+                                        refreshPoll.value = true
                                         tempNewFile.value = false
                                         tempFileName.value = ""
                                     }
