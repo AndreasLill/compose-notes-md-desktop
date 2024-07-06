@@ -24,13 +24,18 @@ import java.io.File
 @Composable
 fun Editor(appState: ApplicationState) {
     val state = remember { EditorState() }
-    val originalText = remember(appState.file) {
-        mutableStateOf(
-            readFile(appState.file)
-        )
-    }
+    val originalText = remember(appState.file) { mutableStateOf(readFile(appState.file)) }
     val text = remember(originalText.value) { mutableStateOf(originalText.value) }
     val diff = remember(originalText.value, text.value) { derivedStateOf { originalText.value != text.value } }
+
+    LaunchedEffect(appState.file) {
+        appState.event.collect {
+            if (it == Action.Save) {
+                FileHandler.saveFile(appState.file, text.value)
+                originalText.value = text.value
+            }
+        }
+    }
 
     LaunchedEffect(diff.value) {
         if (diff.value) {
@@ -43,18 +48,11 @@ fun Editor(appState: ApplicationState) {
         }
     }
 
-    LaunchedEffect(appState.action) {
-        if (appState.action == Action.Save) {
-            FileHandler.saveFile(appState.file, text.value)
-            appState.action = Action.None
-            originalText.value = text.value
-        }
-    }
-
     BasicTextField(
         modifier = Modifier.fillMaxSize(),
         value = text.value,
         onValueChange = { text.value = it },
+        enabled = appState.workspace.isNotBlank() && appState.file != null,
         textStyle = LocalTextStyle.current.copy(
             color = MaterialTheme.colors.primary,
             fontSize = 14.sp,

@@ -1,5 +1,6 @@
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import input.ShortcutHandler
@@ -16,6 +17,7 @@ fun main() = application {
             else -> "Compose Notes - Select a workspace!"
         }
     }
+    val scope = rememberCoroutineScope()
 
     Window(
         onCloseRequest = {
@@ -25,7 +27,7 @@ fun main() = application {
         title = windowTitle,
         state = appState.windowState,
         onPreviewKeyEvent = {
-            ShortcutHandler.event(appState, it)
+            ShortcutHandler.event(scope, appState, it)
         },
         content = {
             MaterialTheme(colors = ColorScheme.Default) {

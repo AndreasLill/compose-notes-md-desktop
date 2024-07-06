@@ -24,9 +24,7 @@ fun MainScreen(appState: ApplicationState) {
                 color = MaterialTheme.colors.primary
             )
             Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.surface).padding(16.dp)) {
-                if (appState.workspace.isNotBlank() && appState.file != null) {
-                    Editor(appState = appState)
-                }
+                Editor(appState = appState)
             }
         }
     }

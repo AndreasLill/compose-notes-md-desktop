@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.description_24dp
 import io.FileHandler
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import model.ApplicationState
 import model.DirectoryState
@@ -28,14 +29,29 @@ import model.enums.Action
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun FileViewer(appState: ApplicationState, focusRequester: FocusRequester)  {
+fun FileViewer(appState: ApplicationState)  {
     val state = remember(appState.workspace) { DirectoryState(appState.workspace) }
     val directory = state.directory.collectAsState(null)
     val tempFileName = remember { mutableStateOf("") }
-    val fileScope = rememberCoroutineScope()
+    val tempNewFile = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(appState.workspace) {
+        appState.event.collect {
+            if (it == Action.NewFile) {
+                tempNewFile.value = true
+                appState.file = null
+                delay(100)
+                try {
+                    focusRequester.requestFocus()
+                } catch(_: Exception) {}
+            }
+        }
+    }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        if (appState.action == Action.NewFile) {
+        if (tempNewFile.value) {
             Card(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp).background(MaterialTheme.colors.primary.copy(alpha = 0.20f)),
                 backgroundColor = Color.Transparent,
@@ -51,15 +67,15 @@ fun FileViewer(appState: ApplicationState, focusRequester: FocusRequester)  {
                         BasicTextField(
                             modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onPreviewKeyEvent {
                                 if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
-                                    fileScope.launch {
+                                    scope.launch {
                                         appState.file = FileHandler.createFile(appState.workspace, tempFileName.value)
-                                        appState.action = Action.None
+                                        tempNewFile.value = false
                                         tempFileName.value = ""
                                     }
                                     true
                                 }
                                 else if (it.key == Key.Escape && it.type == KeyEventType.KeyDown) {
-                                    appState.action = Action.None
+                                    tempNewFile.value = false
                                     tempFileName.value = ""
                                     true
                                 }
@@ -85,7 +101,7 @@ fun FileViewer(appState: ApplicationState, focusRequester: FocusRequester)  {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp).clickable {
                     appState.file = it
                 },
-                backgroundColor = if (appState.file == it && appState.action != Action.NewFile) MaterialTheme.colors.primary.copy(alpha = 0.20f) else Color.Transparent,
+                backgroundColor = if (appState.file == it && !tempNewFile.value) MaterialTheme.colors.primary.copy(alpha = 0.20f) else Color.Transparent,
                 shape = RoundedCornerShape(2.dp),
                 elevation = 0.dp,
                 content = {

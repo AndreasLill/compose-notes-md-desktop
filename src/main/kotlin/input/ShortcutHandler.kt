@@ -1,14 +1,18 @@
 package input
 
 import androidx.compose.ui.input.key.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import model.ApplicationState
 import model.enums.Action
 
 object ShortcutHandler {
-    fun event(appState: ApplicationState, keyEvent: KeyEvent): Boolean {
+    fun event(scope: CoroutineScope, appState: ApplicationState, keyEvent: KeyEvent): Boolean {
         when {
             keyEvent.isCtrlPressed && keyEvent.key == Key.S && keyEvent.type == KeyEventType.KeyDown && appState.file != null -> {
-                appState.action = Action.Save
+                scope.launch {
+                    appState.event.emit(Action.Save)
+                }
                 return true
             }
             else -> return false
