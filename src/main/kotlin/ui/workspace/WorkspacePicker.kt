@@ -13,7 +13,7 @@ import model.enums.Action
 
 @Composable
 fun WorkspacePicker(appState: ApplicationState) {
-    var showPicker = remember { mutableStateOf(false) }
+    val showPicker = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         appState.event.collect {
@@ -30,12 +30,7 @@ fun WorkspacePicker(appState: ApplicationState) {
                     showPicker.value = true
                 },
                 content = {
-                    if (appState.workspace.isBlank()) {
-                        Text("Select Workspace")
-                    }
-                    else {
-                        Text("Change Workspace")
-                    }
+                    Text("Select Workspace")
                 }
             )
         }

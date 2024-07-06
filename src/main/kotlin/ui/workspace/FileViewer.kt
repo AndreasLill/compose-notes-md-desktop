@@ -1,6 +1,9 @@
 package ui.workspace
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ContextMenuArea
+import androidx.compose.foundation.ContextMenuItem
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -14,7 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
@@ -25,16 +30,19 @@ import kotlinx.coroutines.launch
 import model.ApplicationState
 import model.enums.Action
 import org.jetbrains.compose.resources.painterResource
+import java.awt.Desktop
 import java.io.File
 
 @Composable
 fun FileViewer(appState: ApplicationState)  {
     val directory = remember { mutableStateOf<List<File>?>(null) }
     val refreshPoll = remember(appState.workspace) { mutableStateOf(false) }
-    val tempFileName = remember { mutableStateOf("") }
-    val tempNewFile = remember { mutableStateOf(false) }
+    val createFileText = remember { mutableStateOf(TextFieldValue("")) }
+    val createFile = remember { mutableStateOf(false) }
+    val renameFileText = remember { mutableStateOf(TextFieldValue("")) }
+    val renameFileName = remember { mutableStateOf("") }
+    val createFileFocusRequester = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
-    val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(refreshPoll.value) {
         if (refreshPoll.value) {
@@ -46,7 +54,10 @@ fun FileViewer(appState: ApplicationState)  {
         while (true) {
             val temp = File(appState.workspace).listFiles()?.filter { it.extension == "md" }?.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
             temp?.let {
-                directory.value = it
+                if (directory.value != it) {
+                    directory.value = it
+                    println("${appState.workspace} updated.")
+                }
             }
             println("${appState.workspace} polled.")
             delay(1000)
@@ -56,19 +67,19 @@ fun FileViewer(appState: ApplicationState)  {
     LaunchedEffect(appState.workspace) {
         appState.event.collect {
             if (it == Action.NewFile) {
-                tempNewFile.value = true
-                delay(100)
+                createFile.value = true
                 try {
-                    focusRequester.requestFocus()
+                    delay(100)
+                    createFileFocusRequester.requestFocus()
                 } catch(_: Exception) {}
             }
         }
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        if (tempNewFile.value) {
+        if (createFile.value) {
             Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp).background(MaterialTheme.colors.primary.copy(alpha = 0.20f)),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp).background(MaterialTheme.colors.primary.copy(0.10f)),
                 backgroundColor = Color.Transparent,
                 shape = RectangleShape,
                 elevation = 0.dp,
@@ -80,25 +91,25 @@ fun FileViewer(appState: ApplicationState)  {
                             contentDescription = null
                         )
                         BasicTextField(
-                            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onPreviewKeyEvent {
+                            modifier = Modifier.fillMaxWidth().focusRequester(createFileFocusRequester).onPreviewKeyEvent {
                                 if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
                                     scope.launch {
-                                        appState.file = FileHandler.createFile(appState.workspace, tempFileName.value)
+                                        appState.file = FileHandler.createFile(appState.workspace, createFileText.value.text)
                                         refreshPoll.value = true
-                                        tempNewFile.value = false
-                                        tempFileName.value = ""
+                                        createFile.value = false
+                                        createFileText.value = TextFieldValue("")
                                     }
                                     true
                                 }
                                 else if (it.key == Key.Escape && it.type == KeyEventType.KeyDown) {
-                                    tempNewFile.value = false
-                                    tempFileName.value = ""
+                                    createFile.value = false
+                                    createFileText.value = TextFieldValue("")
                                     true
                                 }
                                 else false
                             },
-                            value = tempFileName.value,
-                            onValueChange = { tempFileName.value = it },
+                            value = createFileText.value,
+                            onValueChange = { createFileText.value = it },
                             textStyle = LocalTextStyle.current.copy(
                                 color = MaterialTheme.colors.primary,
                                 fontSize = 13.sp,
@@ -112,27 +123,42 @@ fun FileViewer(appState: ApplicationState)  {
             )
         }
 
-        directory.value?.forEach {
+        directory.value?.forEach { file ->
+            val renameFileFocusRequester = remember { FocusRequester() }
             ContextMenuArea(
                 items = {
                     listOf(
+                        ContextMenuItem("Open In Explorer") {
+                            val desktop = Desktop.getDesktop()
+                            desktop.open(File(appState.workspace))
+                        },
+                        ContextMenuItem("Rename") {
+                            renameFileName.value = file.name
+                            renameFileText.value = TextFieldValue(file.nameWithoutExtension, TextRange(0, file.nameWithoutExtension.length))
+                            scope.launch {
+                                try {
+                                    delay(100)
+                                    renameFileFocusRequester.requestFocus()
+                                } catch(_: Exception) {}
+                            }
+                        },
                         ContextMenuItem("Delete") {
                             scope.launch {
-                                FileHandler.deleteFile(it).let { success ->
+                                FileHandler.deleteFile(file).let { success ->
                                     if (success) {
                                         refreshPoll.value = true
                                     }
                                 }
                             }
-                        }
+                        },
                     )
                 },
                 content = {
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp).clickable {
-                            appState.file = it
+                            appState.file = file
                         },
-                        backgroundColor = if (appState.file == it && !tempNewFile.value) MaterialTheme.colors.primary.copy(alpha = 0.20f) else Color.Transparent,
+                        backgroundColor = if (appState.file == file && !createFile.value) MaterialTheme.colors.primary.copy(0.10f) else Color.Transparent,
                         shape = RoundedCornerShape(2.dp),
                         elevation = 0.dp,
                         content = {
@@ -142,11 +168,43 @@ fun FileViewer(appState: ApplicationState)  {
                                     painter = painterResource(Res.drawable.description_24dp),
                                     contentDescription = null
                                 )
-                                Text(
-                                    text = it.nameWithoutExtension,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Normal
-                                )
+                                if (file.name == renameFileName.value) {
+                                    BasicTextField(
+                                        modifier = Modifier.fillMaxWidth().focusRequester(renameFileFocusRequester).onPreviewKeyEvent {
+                                            if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
+                                                scope.launch {
+                                                    val renamedFile = FileHandler.renameFile(file, renameFileText.value.text)
+                                                    appState.file = renamedFile
+                                                    refreshPoll.value = true
+                                                    renameFileName.value = ""
+                                                    renameFileText.value = TextFieldValue("")
+                                                }
+                                                true
+                                            }
+                                            else if (it.key == Key.Escape && it.type == KeyEventType.KeyDown) {
+                                                renameFileName.value = ""
+                                                renameFileText.value = TextFieldValue("")
+                                                true
+                                            }
+                                            else false
+                                        },
+                                        value = renameFileText.value,
+                                        onValueChange = { renameFileText.value = it },
+                                        textStyle = LocalTextStyle.current.copy(
+                                            color = MaterialTheme.colors.primary,
+                                            fontSize = 13.sp,
+                                        ),
+                                        cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                                        singleLine = true,
+                                        maxLines = 1,
+                                    )
+                                } else {
+                                    Text(
+                                        text = file.nameWithoutExtension,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Normal
+                                    )
+                                }
                             }
                         },
                     )

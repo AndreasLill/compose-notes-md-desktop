@@ -2,6 +2,7 @@ package io
 
 import kotlinx.coroutines.*
 import java.io.File
+import kotlin.io.path.Path
 
 object FileHandler {
     suspend fun readFile(file: File?): String = withContext(Dispatchers.IO) {
@@ -40,5 +41,11 @@ object FileHandler {
     suspend fun deleteFile(file: File): Boolean = withContext(Dispatchers.IO) {
         println("Deleted file ${file.name}")
         return@withContext file.delete()
+    }
+
+    suspend fun renameFile(file: File, name: String): File = withContext(Dispatchers.IO) {
+        val renamedFile = Path(file.parent, "$name.md").toFile()
+        file.renameTo(renamedFile)
+        return@withContext renamedFile
     }
 }
