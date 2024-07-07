@@ -7,12 +7,12 @@ import androidx.compose.ui.focus.FocusRequester
 import kotlinx.coroutines.delay
 import model.ApplicationState
 import model.enums.Action
-import ui.workspace.components.CreateFileItem
-import ui.workspace.components.FileItem
+import ui.workspace.components.WorkspaceItemFileCreate
+import ui.workspace.components.WorkspaceItemFile
 import java.io.File
 
 @Composable
-fun FileViewer(appState: ApplicationState)  {
+fun WorkspaceFileViewer(appState: ApplicationState)  {
     val directory = remember { mutableStateOf<List<File>?>(null) }
     val refreshPoll = remember(appState.workspace) { mutableStateOf(false) }
     val isCreatingFile = remember { mutableStateOf(false) }
@@ -52,7 +52,7 @@ fun FileViewer(appState: ApplicationState)  {
 
     Column(modifier = Modifier.fillMaxWidth()) {
         if (isCreatingFile.value) {
-            CreateFileItem(
+            WorkspaceItemFileCreate(
                 appState = appState,
                 focusRequester = focusRequester,
                 onRefreshPoll = {
@@ -65,7 +65,7 @@ fun FileViewer(appState: ApplicationState)  {
         }
 
         directory.value?.forEach { file ->
-            FileItem(
+            WorkspaceItemFile(
                 appState = appState,
                 file = file,
                 isCreatingFile = isCreatingFile.value,

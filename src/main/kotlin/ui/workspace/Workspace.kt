@@ -9,7 +9,7 @@ fun Workspace(appState: ApplicationState) {
         appState = appState
     )
     if (appState.workspace != null) {
-        FileViewer(
+        WorkspaceFileViewer(
             appState = appState
         )
     }
