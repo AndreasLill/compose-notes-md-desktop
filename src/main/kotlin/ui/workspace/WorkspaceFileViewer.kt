@@ -12,10 +12,8 @@ import model.enums.Action
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.io.path.extension
 import kotlin.io.path.isDirectory
-import kotlin.io.path.pathString
 
 @Composable
 fun WorkspaceFileViewer(appState: ApplicationState)  {
@@ -33,7 +31,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
 
         println("Workspace polling started.")
         while (true) {
-            Files.walk(Paths.get(appState.workspace!!.path), 10).filter { (Files.isDirectory(it) && it.pathString != appState.workspace!!.path) || it.extension == "md" }.toList().let {
+            Files.walk(appState.workspace, 10).filter { (Files.isDirectory(it) && it.toString() != appState.workspace.toString()) || it.extension == "md" }.toList().let {
                 directory.clear()
                 directory.addAll(it)
             }
@@ -43,9 +41,13 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     }
 
     LaunchedEffect(appState.workspace) {
-        appState.event.collect {
-            if (it == Action.NewFile) {
-                // TODO with dialog.
+        appState.event.collect { event ->
+            if (event == Action.NewFile) {
+                appState.workspace?.let { workspace ->
+                    FileHandler.createFile(workspace, "name.md")
+                    //FileHandler.renameFile(workspace.toPath(), "name.md", "newname.md")
+                    // TODO with dialog.
+                }
             }
         }
     }
@@ -54,10 +56,10 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
         directory.forEach { path ->
             WorkspaceFile(
                 path = path,
-                depth = (path.parent.pathString.toCharArray().count { it == '\\' } - appState.workspace!!.path.toCharArray().count { it == '\\' }),
-                visible = path.parent.pathString == appState.workspace!!.path || openFolders.contains(path.parent),
+                depth = (path.parent.toString().toCharArray().count { it == '\\' } - appState.workspace.toString().toCharArray().count { it == '\\' }),
+                visible = path.parent.toString() == appState.workspace.toString() || openFolders.contains(path.parent),
                 selected = selectedItem.value == path,
-                selectedFile = appState.file == path.toFile(),
+                selectedFile = appState.file == path,
                 isOpenFolder = openFolders.contains(path),
                 onClick = {
                     selectedItem.value = path
@@ -67,12 +69,12 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             openFolders.add(path)
                         } else {
                             openFolders.removeIf {
-                                it.pathString.contains(path.pathString)
+                                it.toString().contains(path.toString())
                             }
                         }
                     }
                     else {
-                        appState.file = path.toFile()
+                        appState.file = path
                     }
                 },
                 onOpenInExplorer = {
@@ -83,7 +85,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                 },
                 onDelete = {
                     scope.launch {
-                        FileHandler.deleteFile(path.toFile()).let { success ->
+                        FileHandler.deleteFile(path).let { success ->
                             if (success) {
                                 refreshPoll.value = true
                             }

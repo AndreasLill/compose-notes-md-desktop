@@ -7,12 +7,12 @@ import androidx.compose.ui.window.WindowState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import model.enums.Action
 import model.enums.Screen
-import java.io.File
+import java.nio.file.Path
 
 class ApplicationState {
     var screen by mutableStateOf(Screen.Main)
-    var workspace by mutableStateOf<File?>(null)
-    var file by mutableStateOf<File?>(null)
+    var workspace by mutableStateOf<Path?>(null)
+    var file by mutableStateOf<Path?>(null)
     var windowState by mutableStateOf(WindowState())
     val event = MutableSharedFlow<Action>()
 }

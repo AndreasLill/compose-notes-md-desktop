@@ -1,53 +1,60 @@
 package io
 
-import kotlinx.coroutines.*
-import java.io.File
-import kotlin.io.path.Path
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 object FileHandler {
-    suspend fun readFile(file: File?): String = withContext(Dispatchers.IO) {
-        file?.let { file ->
-            file.bufferedReader().use { reader ->
-                val str = reader.readText()
-                println("Read file ${file.name}")
-                return@withContext str
-            }
-        }
-
-        return@withContext ""
-    }
-
-    suspend fun saveFile(file: File?, data: String) = withContext(Dispatchers.IO) {
-        file?.let { file ->
-            file.bufferedWriter().use { writer ->
-                writer.write(data)
-            }
-            println("Saved file ${file.name}")
-        }
-    }
-
-    suspend fun createFile(workspace: File?, name: String): File? = withContext(Dispatchers.IO) {
-        workspace?.let { workspace ->
-            val success = File("$workspace/$name.md").createNewFile()
-
-            if (success) {
-                println("Created file $name.md")
-                return@withContext File("$workspace/$name.md")
-            }
-
-            println("Could not create file $name.md - already exists")
+    suspend fun readFile(path: Path): String? = withContext(Dispatchers.IO) {
+        try {
+            println("Read file: ${path.fileName}")
+            return@withContext Files.readString(path)
+        } catch (ex: IOException) {
+            println("Error reading file: $ex")
             return@withContext null
         }
     }
 
-    suspend fun deleteFile(file: File): Boolean = withContext(Dispatchers.IO) {
-        println("Deleted file ${file.name}")
-        return@withContext file.delete()
+    suspend fun saveFile(path: Path, data: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Files.writeString(path, data)
+            println("Saved file: ${path.fileName}")
+            return@withContext true
+        } catch (ex: IOException) {
+            println("Error saving file: $ex")
+            return@withContext false
+        }
     }
 
-    suspend fun renameFile(file: File, name: String): File = withContext(Dispatchers.IO) {
-        val renamedFile = Path(file.parent, "$name.md").toFile()
-        file.renameTo(renamedFile)
-        return@withContext renamedFile
+    suspend fun createFile(path: Path, name: String): Path? = withContext(Dispatchers.IO) {
+        try {
+            return@withContext Files.createFile(Paths.get(path.toString(), "/", name))
+        } catch (ex: IOException) {
+            println("Error creating file: $ex")
+            return@withContext null
+        }
+    }
+
+    suspend fun deleteFile(path: Path): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Files.delete(path)
+            println("Deleted file: ${path.fileName}")
+            return@withContext true
+        } catch (ex: IOException) {
+            println("Error deleting file: $ex")
+            return@withContext false
+        }
+    }
+
+    suspend fun renameFile(path: Path, fromName: String, toName: String): Path? = withContext(Dispatchers.IO) {
+        try {
+            return@withContext Files.move(Paths.get(path.toString(), fromName), Paths.get(path.toString(), toName))
+        } catch (ex: IOException) {
+            println("Error renaming file: $ex")
+            return@withContext null
+        }
     }
 }

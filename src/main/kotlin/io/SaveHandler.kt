@@ -9,6 +9,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import model.ApplicationState
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 
 object SaveHandler {
     private val HOME = System.getProperty("user.home")
@@ -62,15 +64,17 @@ object SaveHandler {
 
                 when(key) {
                     "workspace" -> {
-                        File(value).let { file ->
-                            if (file.exists())
-                                appState.workspace = file
+                        Paths.get(value).let { path ->
+                            if (Files.exists(path)) {
+                                appState.workspace = path
+                            }
                         }
                     }
                     "file" -> {
-                        File(value).let { file ->
-                            if (file.exists())
-                                appState.file = file
+                        Paths.get(value).let { path ->
+                            if (Files.exists(path)) {
+                                appState.file = path
+                            }
                         }
                     }
                     "window_width" -> windowWidth = value.toInt()

@@ -19,7 +19,7 @@ import kotlinx.coroutines.runBlocking
 import model.ApplicationState
 import model.EditorState
 import model.enums.Action
-import java.io.File
+import java.nio.file.Path
 
 @Composable
 fun Editor(appState: ApplicationState) {
@@ -29,10 +29,12 @@ fun Editor(appState: ApplicationState) {
     val diff = remember(originalText.value, text.value) { derivedStateOf { originalText.value != text.value } }
 
     LaunchedEffect(appState.file) {
-        appState.event.collect {
-            if (it == Action.Save) {
-                FileHandler.saveFile(appState.file, text.value)
-                originalText.value = text.value
+        appState.event.collect { event ->
+            if (event == Action.Save) {
+                appState.file?.let { file ->
+                    FileHandler.saveFile(file, text.value)
+                    originalText.value = text.value
+                }
             }
         }
     }
@@ -116,6 +118,9 @@ fun isLastLine(index: Int, size: Int): Boolean {
     return index == size - 1
 }
 
-fun readFile(file: File?): String = runBlocking {
-    return@runBlocking FileHandler.readFile(file)
+fun readFile(path: Path?): String = runBlocking {
+    path?.let {
+        return@runBlocking FileHandler.readFile(it) ?: ""
+    }
+    return@runBlocking ""
 }
