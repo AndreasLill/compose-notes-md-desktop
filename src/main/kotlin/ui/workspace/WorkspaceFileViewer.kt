@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
+import io.FileHandler
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import model.ApplicationState
 import model.enums.Action
+import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -20,9 +22,8 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     val directory = remember { mutableStateListOf<Path>() }
     val openFolders = remember { mutableStateListOf<Path>() }
     val refreshPoll = remember(appState.workspace) { mutableStateOf(false) }
-    val isCreatingFile = remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
     val selectedItem = remember { mutableStateOf<Path?>(null) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(refreshPoll.value) {
         if (refreshPoll.value) {
@@ -44,29 +45,12 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     LaunchedEffect(appState.workspace) {
         appState.event.collect {
             if (it == Action.NewFile) {
-                isCreatingFile.value = true
-                try {
-                    delay(100)
-                    focusRequester.requestFocus()
-                } catch(_: Exception) {}
+                // TODO with dialog.
             }
         }
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        /*if (isCreatingFile.value) {
-            WorkspaceItemFileCreate(
-                appState = appState,
-                focusRequester = focusRequester,
-                onRefreshPoll = {
-                    refreshPoll.value = true
-                },
-                onCreateFile = {
-                    isCreatingFile.value = it
-                }
-            )
-        }*/
-
         directory.forEach { path ->
             WorkspaceFile(
                 path = path,
@@ -90,7 +74,22 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     else {
                         appState.file = path.toFile()
                     }
-                }
+                },
+                onOpenInExplorer = {
+                    Desktop.getDesktop().open(path.parent.toFile())
+                },
+                onRename = {
+                    // TODO with dialog.
+                },
+                onDelete = {
+                    scope.launch {
+                        FileHandler.deleteFile(path.toFile()).let { success ->
+                            if (success) {
+                                refreshPoll.value = true
+                            }
+                        }
+                    }
+                },
             )
         }
     }

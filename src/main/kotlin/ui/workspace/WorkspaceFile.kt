@@ -1,6 +1,8 @@
 package ui.workspace
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ContextMenuArea
+import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,35 +33,58 @@ fun WorkspaceFile(
     selected: Boolean,
     selectedFile: Boolean,
     isOpenFolder: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onOpenInExplorer: () -> Unit,
+    onRename: () -> Unit,
+    onDelete: () -> Unit
 ) {
     if (visible) {
-        Card(
-            modifier = Modifier.fillMaxWidth().height(36.dp).clickable {
-                onClick()
+        ContextMenuArea(
+            items = {
+                listOf(
+                    ContextMenuItem(
+                        label = "Open In Explorer",
+                        onClick = onOpenInExplorer,
+                    ),
+                    ContextMenuItem(
+                        label = "Rename",
+                        onClick = onRename,
+                    ),
+                    ContextMenuItem(
+                        label = "Delete",
+                        onClick = onDelete,
+                    ),
+                )
             },
-            border = BorderStroke(1.dp, if (selected) MaterialTheme.colors.primary.copy(0.5f) else Color.Transparent),
-            backgroundColor = if (selectedFile) MaterialTheme.colors.primary.copy(0.1f) else Color.Transparent,
-            shape = RoundedCornerShape(2.dp),
-            elevation = 0.dp,
             content = {
-                Row(
-                    modifier = Modifier.padding(4.dp).padding(start = (20 * depth).dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        modifier = Modifier.size(16.dp),
-                        painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.folder_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.folder_open_24dp) else painterResource(Res.drawable.description_24dp),
-                        contentDescription = null,
-                        tint = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
-                    )
-                    Text(
-                        text = path.nameWithoutExtension,
-                        fontSize = 13.sp,
-                        color = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
-                    )
-                }
+                Card(
+                    modifier = Modifier.fillMaxWidth().height(36.dp).clickable {
+                        onClick()
+                    },
+                    border = BorderStroke(1.dp, if (selected) MaterialTheme.colors.primary.copy(0.5f) else Color.Transparent),
+                    backgroundColor = if (selectedFile) MaterialTheme.colors.primary.copy(0.1f) else Color.Transparent,
+                    shape = RoundedCornerShape(2.dp),
+                    elevation = 0.dp,
+                    content = {
+                        Row(
+                            modifier = Modifier.padding(4.dp).padding(start = (20 * depth).dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(16.dp),
+                                painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.folder_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.folder_open_24dp) else painterResource(Res.drawable.description_24dp),
+                                contentDescription = null,
+                                tint = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+                            )
+                            Text(
+                                text = path.nameWithoutExtension,
+                                fontSize = 13.sp,
+                                color = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+                            )
+                        }
+                    }
+                )
             }
         )
     }
