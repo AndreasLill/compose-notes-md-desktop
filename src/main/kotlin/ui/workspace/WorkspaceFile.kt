@@ -23,7 +23,6 @@ import com.example.composenotesmd.desktop.composenotesmd.generated.resources.fol
 import org.jetbrains.compose.resources.painterResource
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
-import kotlin.io.path.nameWithoutExtension
 
 @Composable
 fun WorkspaceFile(
@@ -78,7 +77,7 @@ fun WorkspaceFile(
                                 tint = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                             )
                             Text(
-                                text = path.nameWithoutExtension,
+                                text = path.fileName.toString(),
                                 fontSize = 13.sp,
                                 color = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                             )

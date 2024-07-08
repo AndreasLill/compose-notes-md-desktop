@@ -18,9 +18,9 @@ import kotlin.io.path.isDirectory
 @Composable
 fun WorkspaceFileViewer(appState: ApplicationState)  {
     val directory = remember { mutableStateListOf<Path>() }
-    val openFolders = remember { mutableStateListOf<Path>() }
+    val openFolders = remember(appState.workspace) { mutableStateListOf<Path>() }
     val refreshPoll = remember(appState.workspace) { mutableStateOf(false) }
-    val selectedItem = remember { mutableStateOf<Path?>(null) }
+    val selectedItem = remember(appState.workspace) { mutableStateOf<Path?>(null) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(refreshPoll.value) {
