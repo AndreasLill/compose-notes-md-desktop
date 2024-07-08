@@ -11,7 +11,7 @@ object ShortcutHandler {
         when {
             keyEvent.isCtrlPressed && keyEvent.key == Key.S && keyEvent.type == KeyEventType.KeyDown && appState.file != null -> {
                 scope.launch {
-                    appState.event.emit(Action.Save)
+                    appState.event.emit(Action.SaveFile)
                 }
                 return true
             }

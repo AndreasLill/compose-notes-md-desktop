@@ -30,7 +30,7 @@ fun Editor(appState: ApplicationState) {
 
     LaunchedEffect(appState.file) {
         appState.event.collect { event ->
-            if (event == Action.Save) {
+            if (event == Action.SaveFile) {
                 appState.file?.let { file ->
                     FileHandler.saveFile(file, text.value)
                     originalText.value = text.value

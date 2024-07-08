@@ -3,10 +3,11 @@ package io
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.io.path.nameWithoutExtension
+import kotlin.io.path.deleteExisting
 
 object FileHandler {
     suspend fun readFile(path: Path): String? = withContext(Dispatchers.IO) {
@@ -30,16 +31,50 @@ object FileHandler {
         }
     }
 
+    /**
+     * Create a file from path and increment retry with number if already exists.
+     */
     suspend fun createFile(path: Path): Path? = withContext(Dispatchers.IO) {
         val defaultName = "Untitled"
-        val count = Files.walk(path, 1).filter { it.nameWithoutExtension.startsWith(defaultName) }.count()
-        val fileName = if (count > 0) "$defaultName ($count).md" else "$defaultName.md"
-        try {
-            return@withContext Files.createFile(Paths.get(path.toString(), "/", fileName))
-        } catch (ex: IOException) {
-            println("Error creating file: $ex")
-            return@withContext null
+        var count = 0
+        while (true) {
+            try {
+                val fileName = if (count > 0) "$defaultName ($count).md" else "$defaultName.md"
+                val file = Files.createFile(Paths.get(path.toString(), "/", fileName))
+                println("Created file: ${file.fileName}")
+                return@withContext file
+            } catch (ex: FileAlreadyExistsException) {
+                count++
+                println("Create file already exists: $ex")
+            } catch (ex: IOException) {
+                println("Error creating file: $ex")
+                break
+            }
         }
+        return@withContext null
+    }
+
+    /**
+     * Create a folder from path and increment retry with number if already exists.
+     */
+    suspend fun createFolder(path: Path): Path? = withContext(Dispatchers.IO) {
+        val defaultName = "Folder"
+        var count = 0
+        while (true) {
+            try {
+                val fileName = if (count > 0) "$defaultName ($count)" else defaultName
+                val folder = Files.createDirectory(Paths.get(path.toString(), "/", fileName))
+                println("Created folder: ${folder.fileName}")
+                return@withContext folder
+            } catch (ex: FileAlreadyExistsException) {
+                count++
+                println("Create folder already exists: $ex")
+            } catch (ex: IOException) {
+                println("Error creating folder: $ex")
+                break
+            }
+        }
+        return@withContext null
     }
 
     suspend fun deleteFile(path: Path): Boolean = withContext(Dispatchers.IO) {
@@ -49,6 +84,23 @@ object FileHandler {
             return@withContext true
         } catch (ex: IOException) {
             println("Error deleting file: $ex")
+            return@withContext false
+        }
+    }
+
+    suspend fun deleteFolder(path: Path): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val paths = Files.walk(path).sorted(Comparator.reverseOrder())
+            paths.forEach { file ->
+                try {
+                    file.deleteExisting()
+                } catch (ex: IOException) {
+                    println("Error deleting file: $ex")
+                }
+            }
+            return@withContext true
+        } catch (ex: IOException) {
+            println("Error deleting folder: $ex")
             return@withContext false
         }
     }

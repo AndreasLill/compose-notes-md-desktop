@@ -35,6 +35,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                 directory.clear()
                 directory.addAll(it)
             }
+            selectedItem.value?.let { path ->
+                // If the selected item was moved or deleted, set back to null.
+                if (Files.notExists(path))
+                    selectedItem.value = null
+            }
             println("${appState.workspace} polled.")
             delay(1000)
         }
@@ -42,11 +47,47 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
 
     LaunchedEffect(appState.workspace) {
         appState.event.collect { event ->
-            if (event == Action.NewFile) {
-                appState.workspace?.let { workspace ->
-                    FileHandler.createFile(workspace)
-                    refreshPoll.value = true
+            when (event) {
+                Action.NewFile -> {
+                    selectedItem.value?.let { path ->
+                        if (path.isDirectory()) {
+                            FileHandler.createFile(path)?.let {
+                                refreshPoll.value = true
+                            }
+                        } else {
+                            FileHandler.createFile(path.parent)?.let {
+                                refreshPoll.value = true
+                            }
+                        }
+                        return@collect
+                    }
+                    appState.workspace?.let { path ->
+                        FileHandler.createFile(path)?.let {
+                            refreshPoll.value = true
+                        }
+                        return@collect
+                    }
                 }
+                Action.NewFolder -> {
+                    selectedItem.value?.let { path ->
+                        if (path.isDirectory()) {
+                            FileHandler.createFolder(path)?.let {
+                                refreshPoll.value = true
+                            }
+                        } else {
+                            FileHandler.createFolder(path.parent)?.let {
+                                refreshPoll.value = true
+                            }
+                        }
+                        return@collect
+                    }
+                    appState.workspace?.let { path ->
+                        FileHandler.createFolder(path)
+                        refreshPoll.value = true
+                        return@collect
+                    }
+                }
+                else -> {}
             }
         }
     }
@@ -84,9 +125,17 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                 },
                 onDelete = {
                     scope.launch {
-                        FileHandler.deleteFile(path).let { success ->
-                            if (success) {
-                                refreshPoll.value = true
+                        if (path.isDirectory()) {
+                            FileHandler.deleteFolder(path).let { success ->
+                                if (success) {
+                                    refreshPoll.value = true
+                                }
+                            }
+                        } else {
+                            FileHandler.deleteFile(path).let { success ->
+                                if (success) {
+                                    refreshPoll.value = true
+                                }
                             }
                         }
                     }

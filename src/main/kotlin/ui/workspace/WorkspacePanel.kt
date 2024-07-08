@@ -41,7 +41,9 @@ fun WorkspacePanel(appState: ApplicationState) {
             )
             IconButton(
                 onClick = {
-                    println("new folder")
+                    scope.launch {
+                        appState.event.emit(Action.NewFolder)
+                    }
                 },
                 content = {
                     Icon(
