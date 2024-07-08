@@ -6,6 +6,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.nameWithoutExtension
 
 object FileHandler {
     suspend fun readFile(path: Path): String? = withContext(Dispatchers.IO) {
@@ -29,9 +30,12 @@ object FileHandler {
         }
     }
 
-    suspend fun createFile(path: Path, name: String): Path? = withContext(Dispatchers.IO) {
+    suspend fun createFile(path: Path): Path? = withContext(Dispatchers.IO) {
+        val defaultName = "Untitled"
+        val count = Files.walk(path, 1).filter { it.nameWithoutExtension.startsWith(defaultName) }.count()
+        val fileName = if (count > 0) "$defaultName ($count).md" else "$defaultName.md"
         try {
-            return@withContext Files.createFile(Paths.get(path.toString(), "/", name))
+            return@withContext Files.createFile(Paths.get(path.toString(), "/", fileName))
         } catch (ex: IOException) {
             println("Error creating file: $ex")
             return@withContext null

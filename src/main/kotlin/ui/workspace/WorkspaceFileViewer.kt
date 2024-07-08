@@ -44,9 +44,8 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
         appState.event.collect { event ->
             if (event == Action.NewFile) {
                 appState.workspace?.let { workspace ->
-                    FileHandler.createFile(workspace, "name.md")
-                    //FileHandler.renameFile(workspace.toPath(), "name.md", "newname.md")
-                    // TODO with dialog.
+                    FileHandler.createFile(workspace)
+                    refreshPoll.value = true
                 }
             }
         }
