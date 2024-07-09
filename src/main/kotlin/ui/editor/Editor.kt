@@ -1,18 +1,25 @@
 package ui.editor
 
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.Divider
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.FileHandler
 import kotlinx.coroutines.runBlocking
@@ -25,15 +32,15 @@ import java.nio.file.Path
 fun Editor(appState: ApplicationState) {
     val state = remember { EditorState() }
     val originalText = remember(appState.file) { mutableStateOf(readFile(appState.file)) }
-    val text = remember(originalText.value) { mutableStateOf(originalText.value) }
-    val diff = remember(originalText.value, text.value) { derivedStateOf { originalText.value != text.value } }
+    val text = remember(originalText.value) { mutableStateOf(TextFieldValue(originalText.value)) }
+    val diff = remember(originalText.value, text.value) { derivedStateOf { originalText.value != text.value.text } }
 
     LaunchedEffect(appState.file) {
         appState.event.collect { event ->
             if (event == Action.SaveFile) {
                 appState.file?.let { file ->
-                    FileHandler.saveFile(file, text.value)
-                    originalText.value = text.value
+                    FileHandler.saveFile(file, text.value.text)
+                    originalText.value = text.value.text
                 }
             }
         }
@@ -50,24 +57,43 @@ fun Editor(appState: ApplicationState) {
         }
     }
 
-    BasicTextField(
-        modifier = Modifier.fillMaxSize(),
-        value = text.value,
-        onValueChange = { text.value = it },
-        enabled = appState.workspace != null && appState.file != null,
-        textStyle = LocalTextStyle.current.copy(
-            color = MaterialTheme.colors.primary,
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace
-        ),
-        cursorBrush = SolidColor(MaterialTheme.colors.primary),
-        visualTransformation = {
-            TransformedText(
-                text = markdownAnnotatedString(state, text.value),
-                offsetMapping = OffsetMapping.Identity
+    Box(modifier = Modifier.fillMaxSize()) {
+        BasicTextField(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            value = text.value,
+            onValueChange = { text.value = it },
+            enabled = appState.workspace != null && appState.file != null,
+            textStyle = LocalTextStyle.current.copy(
+                color = MaterialTheme.colors.primary,
+                fontSize = 14.sp,
+                fontFamily = FontFamily.Monospace
+            ),
+            cursorBrush = SolidColor(MaterialTheme.colors.primary),
+            visualTransformation = {
+                TransformedText(
+                    text = markdownAnnotatedString(state, text.value.text),
+                    offsetMapping = OffsetMapping.Identity
+                )
+            }
+        )
+        Column(modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).background(MaterialTheme.colors.background)) {
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 1.dp
             )
+            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp)) {
+                Column(modifier = Modifier.align(Alignment.CenterEnd)) {
+                    SelectionContainer {
+                        Text(
+                            text = if (text.value.selection.length > 0) "${text.value.text.length} characters (${text.value.selection.length} selected)" else "${text.value.text.length} characters",
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
         }
-    )
+    }
 }
 
 /**

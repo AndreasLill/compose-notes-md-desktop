@@ -23,7 +23,7 @@ fun MainScreen(appState: ApplicationState) {
                 modifier = Modifier.width(1.dp).fillMaxHeight(),
                 color = MaterialTheme.colors.primary
             )
-            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.surface).padding(16.dp)) {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.surface)) {
                 Editor(appState = appState)
             }
         }
