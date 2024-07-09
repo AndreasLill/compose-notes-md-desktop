@@ -24,49 +24,51 @@ import org.jetbrains.compose.resources.painterResource
 fun WorkspacePanel(appState: ApplicationState) {
     val scope = rememberCoroutineScope()
 
-    Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Row(modifier = Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = {
-                    scope.launch {
-                        appState.event.emit(Action.NewFile)
+    if (appState.workspace != null) {
+        Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Row(modifier = Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            appState.event.emit(Action.NewFile)
+                        }
+                    },
+                    content = {
+                        Icon(
+                            painter = painterResource(Res.drawable.note_add_24dp),
+                            contentDescription = null
+                        )
                     }
-                },
-                content = {
-                    Icon(
-                        painter = painterResource(Res.drawable.note_add_24dp),
-                        contentDescription = null
-                    )
-                }
-            )
-            IconButton(
-                onClick = {
-                    scope.launch {
-                        appState.event.emit(Action.NewFolder)
+                )
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            appState.event.emit(Action.NewFolder)
+                        }
+                    },
+                    content = {
+                        Icon(
+                            painter = painterResource(Res.drawable.create_new_folder_24dp),
+                            contentDescription = null
+                        )
                     }
-                },
-                content = {
-                    Icon(
-                        painter = painterResource(Res.drawable.create_new_folder_24dp),
-                        contentDescription = null
-                    )
-                }
-            )
-        }
-        Row(modifier = Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = {
-                    scope.launch {
-                        appState.event.emit(Action.ChangeWorkspace)
+                )
+            }
+            Row(modifier = Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            appState.event.emit(Action.ChangeWorkspace)
+                        }
+                    },
+                    content = {
+                        Icon(
+                            painter = painterResource(Res.drawable.sync_24dp),
+                            contentDescription = null
+                        )
                     }
-                },
-                content = {
-                    Icon(
-                        painter = painterResource(Res.drawable.sync_24dp),
-                        contentDescription = null
-                    )
-                }
-            )
+                )
+            }
         }
     }
 }

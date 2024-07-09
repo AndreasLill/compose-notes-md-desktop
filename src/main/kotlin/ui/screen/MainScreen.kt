@@ -8,16 +8,26 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ui.editor.Editor
-import ui.workspace.Workspace
 import model.ApplicationState
+import ui.editor.Editor
+import ui.workspace.WorkspaceFileViewer
+import ui.workspace.WorkspacePanel
+import ui.workspace.WorkspacePicker
 
 @Composable
 fun MainScreen(appState: ApplicationState) {
     Surface {
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.width(300.dp).fillMaxHeight().background(MaterialTheme.colors.background)) {
-                Workspace(appState = appState)
+                WorkspacePanel(
+                    appState = appState
+                )
+                WorkspaceFileViewer(
+                    appState = appState
+                )
+                WorkspacePicker(
+                    appState = appState
+                )
             }
             Divider(
                 modifier = Modifier.width(1.dp).fillMaxHeight(),

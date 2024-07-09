@@ -31,7 +31,6 @@ fun Editor(appState: ApplicationState) {
     val state = remember { EditorState() }
     val originalText = remember(appState.file) { mutableStateOf(readFile(appState.file)) }
     val text = remember(originalText.value) { mutableStateOf(TextFieldValue(originalText.value)) }
-    val diff = remember(originalText.value, text.value) { derivedStateOf { originalText.value != text.value.text } }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(appState.file) {
@@ -42,17 +41,6 @@ fun Editor(appState: ApplicationState) {
                     originalText.value = text.value.text
                 }
             }
-        }
-    }
-
-    LaunchedEffect(diff.value) {
-        if (diff.value) {
-            // TODO: Set * for unsaved.
-            //appState.title = appState.title.plus("*")
-        }
-        else {
-            // TODO: Remove * for unsaved.
-            //appState.title = appState.title.removeSuffix("*")
         }
     }
 
@@ -75,11 +63,12 @@ fun Editor(appState: ApplicationState) {
                     )
                 }
             )
-        } else {
+        }
+        if (appState.workspace != null && appState.file == null) {
             Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "No file is open",
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                 )
                 TextButton(
                     onClick = {
@@ -93,19 +82,21 @@ fun Editor(appState: ApplicationState) {
                 )
             }
         }
-        Column(modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).background(MaterialTheme.colors.background)) {
-            Divider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp
-            )
-            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp)) {
-                Column(modifier = Modifier.align(Alignment.CenterEnd)) {
-                    SelectionContainer {
-                        Text(
-                            text = if (text.value.selection.length > 0) "${text.value.text.length} characters (${text.value.selection.length} selected)" else "${text.value.text.length} characters",
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                        )
+        if (appState.file != null) {
+            Column(modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).background(MaterialTheme.colors.background)) {
+                Divider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.dp
+                )
+                Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp)) {
+                    Column(modifier = Modifier.align(Alignment.CenterEnd)) {
+                        SelectionContainer {
+                            Text(
+                                text = if (text.value.selection.length > 0) "${text.value.text.length} characters (${text.value.selection.length} selected)" else "${text.value.text.length} characters",
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }

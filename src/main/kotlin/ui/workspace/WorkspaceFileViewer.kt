@@ -23,7 +23,10 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     val selectedItem = remember(appState.workspace) { mutableStateOf<Path?>(null) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(refreshPoll.value) {
+    LaunchedEffect(appState.workspace, refreshPoll.value) {
+        if (appState.workspace == null) {
+            return@LaunchedEffect
+        }
         if (refreshPoll.value) {
             refreshPoll.value = false
             return@LaunchedEffect
@@ -50,6 +53,10 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     }
 
     LaunchedEffect(appState.workspace) {
+        if (appState.workspace == null) {
+            return@LaunchedEffect
+        }
+
         appState.event.collect { event ->
             when (event) {
                 Action.NewFile -> {
