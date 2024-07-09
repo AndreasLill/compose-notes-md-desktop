@@ -135,7 +135,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     }
                 },
                 onOpenInExplorer = {
-                    Desktop.getDesktop().open(path.parent.toFile())
+                    if (path.isDirectory()) {
+                        Desktop.getDesktop().open(path.toFile())
+                    } else {
+                        Desktop.getDesktop().open(path.parent.toFile())
+                    }
                 },
                 onRename = {
                     // TODO with dialog.
