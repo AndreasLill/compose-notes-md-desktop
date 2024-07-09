@@ -40,6 +40,10 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                 if (Files.notExists(path))
                     selectedItem.value = null
             }
+            appState.file?.let { path ->
+                if (Files.notExists(path))
+                    appState.file = null
+            }
             println("${appState.workspace} polled.")
             delay(1000)
         }
@@ -53,10 +57,14 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                         if (path.isDirectory()) {
                             FileHandler.createFile(path)?.let {
                                 refreshPoll.value = true
+                                appState.file = it
+                                selectedItem.value = it
                             }
                         } else {
                             FileHandler.createFile(path.parent)?.let {
                                 refreshPoll.value = true
+                                appState.file = it
+                                selectedItem.value = it
                             }
                         }
                         return@collect
@@ -64,6 +72,8 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     appState.workspace?.let { path ->
                         FileHandler.createFile(path)?.let {
                             refreshPoll.value = true
+                            appState.file = it
+                            selectedItem.value = it
                         }
                         return@collect
                     }
@@ -126,16 +136,12 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                 onDelete = {
                     scope.launch {
                         if (path.isDirectory()) {
-                            FileHandler.deleteFolder(path).let { success ->
-                                if (success) {
-                                    refreshPoll.value = true
-                                }
+                            FileHandler.deleteFolder(path).let {
+                                refreshPoll.value = true
                             }
                         } else {
-                            FileHandler.deleteFile(path).let { success ->
-                                if (success) {
-                                    refreshPoll.value = true
-                                }
+                            FileHandler.deleteFile(path).let {
+                                refreshPoll.value = true
                             }
                         }
                     }

@@ -4,10 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.Divider
-import androidx.compose.material.LocalTextStyle
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +19,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.FileHandler
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import model.ApplicationState
 import model.EditorState
@@ -34,6 +32,7 @@ fun Editor(appState: ApplicationState) {
     val originalText = remember(appState.file) { mutableStateOf(readFile(appState.file)) }
     val text = remember(originalText.value) { mutableStateOf(TextFieldValue(originalText.value)) }
     val diff = remember(originalText.value, text.value) { derivedStateOf { originalText.value != text.value.text } }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(appState.file) {
         appState.event.collect { event ->
@@ -58,24 +57,42 @@ fun Editor(appState: ApplicationState) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        BasicTextField(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            value = text.value,
-            onValueChange = { text.value = it },
-            enabled = appState.workspace != null && appState.file != null,
-            textStyle = LocalTextStyle.current.copy(
-                color = MaterialTheme.colors.primary,
-                fontSize = 14.sp,
-                fontFamily = FontFamily.Monospace
-            ),
-            cursorBrush = SolidColor(MaterialTheme.colors.primary),
-            visualTransformation = {
-                TransformedText(
-                    text = markdownAnnotatedString(state, text.value.text),
-                    offsetMapping = OffsetMapping.Identity
+        if (appState.file != null) {
+            BasicTextField(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                value = text.value,
+                onValueChange = { text.value = it },
+                textStyle = LocalTextStyle.current.copy(
+                    color = MaterialTheme.colors.primary,
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily.Monospace
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                visualTransformation = {
+                    TransformedText(
+                        text = markdownAnnotatedString(state, text.value.text),
+                        offsetMapping = OffsetMapping.Identity
+                    )
+                }
+            )
+        } else {
+            Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "No file is open",
+                    fontSize = 24.sp,
+                )
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            appState.event.emit(Action.NewFile)
+                        }
+                    },
+                    content = {
+                        Text("Create a new file (CTRL + N)")
+                    }
                 )
             }
-        )
+        }
         Column(modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).background(MaterialTheme.colors.background)) {
             Divider(
                 modifier = Modifier.fillMaxWidth(),
