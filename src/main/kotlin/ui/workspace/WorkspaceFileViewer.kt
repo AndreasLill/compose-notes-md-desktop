@@ -83,17 +83,24 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                         if (path.isDirectory()) {
                             FileHandler.createFolder(path)?.let {
                                 refreshPoll.value = true
+                                selectedItem.value = it
+                                openFolders.add(it)
                             }
                         } else {
                             FileHandler.createFolder(path.parent)?.let {
                                 refreshPoll.value = true
+                                selectedItem.value = it
+                                openFolders.add(it)
                             }
                         }
                         return@collect
                     }
                     appState.workspace?.let { path ->
-                        FileHandler.createFolder(path)
-                        refreshPoll.value = true
+                        FileHandler.createFolder(path)?.let {
+                            refreshPoll.value = true
+                            selectedItem.value = it
+                            openFolders.add(it)
+                        }
                         return@collect
                     }
                 }
