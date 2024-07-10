@@ -6,14 +6,26 @@ import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
@@ -34,9 +46,13 @@ fun WorkspaceFile(
     isOpenFolder: Boolean,
     onClick: () -> Unit,
     onOpenInExplorer: () -> Unit,
-    onRename: () -> Unit,
+    onBeginRename: () -> Unit,
+    onRename: (String) -> Unit,
     onDelete: () -> Unit
 ) {
+    val isRenaming = remember { mutableStateOf(false) }
+    val textField = remember(path) { mutableStateOf(TextFieldValue(path.fileName.toString())) }
+    val focusRequester = remember { FocusRequester() }
     if (visible) {
         ContextMenuArea(
             items = {
@@ -47,7 +63,12 @@ fun WorkspaceFile(
                     ),
                     ContextMenuItem(
                         label = "Rename",
-                        onClick = onRename,
+                        onClick = {
+                            onBeginRename()
+                            isRenaming.value = true
+                            textField.value = TextFieldValue(textField.value.text, TextRange(0, textField.value.text.length))
+                            focusRequester.requestFocus()
+                        },
                     ),
                     ContextMenuItem(
                         label = "Delete",
@@ -76,10 +97,36 @@ fun WorkspaceFile(
                                 contentDescription = null,
                                 tint = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                             )
-                            Text(
-                                text = path.fileName.toString(),
-                                fontSize = 13.sp,
-                                color = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+                            BasicTextField(
+                                modifier = Modifier.focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
+                                    if (!it.isFocused) {
+                                        textField.value = TextFieldValue(path.fileName.toString())
+                                        isRenaming.value = false
+                                    }
+                                }.onPreviewKeyEvent {
+                                    if (it.key == Key.Enter && it.type == KeyEventType.KeyUp && isRenaming.value) {
+                                        onRename(textField.value.text)
+                                        textField.value = TextFieldValue(path.fileName.toString())
+                                        isRenaming.value = false
+                                    }
+                                    false
+                                }
+                                .then(
+                                    if (isRenaming.value) {
+                                        Modifier.fillMaxWidth()
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
+                                readOnly = !isRenaming.value,
+                                value = textField.value,
+                                onValueChange = { textField.value = it },
+                                singleLine = true,
+                                cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                                textStyle = LocalTextStyle.current.copy(
+                                    color = if (selectedFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                    fontSize = 13.sp,
+                                ),
                             )
                         }
                     }

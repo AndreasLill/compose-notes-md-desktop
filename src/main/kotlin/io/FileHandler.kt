@@ -8,8 +8,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.deleteExisting
+import kotlin.io.path.isDirectory
 
 object FileHandler {
+    /**
+     * Read all file contents.
+     */
     suspend fun readFile(path: Path): String? = withContext(Dispatchers.IO) {
         try {
             println("Read file: ${path.fileName}")
@@ -20,6 +24,9 @@ object FileHandler {
         }
     }
 
+    /**
+     * Save all file contents.
+     */
     suspend fun saveFile(path: Path, data: String): Boolean = withContext(Dispatchers.IO) {
         try {
             Files.writeString(path, data)
@@ -77,37 +84,34 @@ object FileHandler {
         return@withContext null
     }
 
-    suspend fun deleteFile(path: Path): Boolean = withContext(Dispatchers.IO) {
+    /**
+     * Delete a file or folder and all contents.
+     */
+    suspend fun delete(path: Path): Boolean = withContext(Dispatchers.IO) {
         try {
-            Files.delete(path)
-            println("Deleted file: ${path.fileName}")
-            return@withContext true
-        } catch (ex: IOException) {
-            println("Error deleting file: $ex")
-            return@withContext false
-        }
-    }
-
-    suspend fun deleteFolder(path: Path): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val paths = Files.walk(path).sorted(Comparator.reverseOrder())
-            paths.forEach { file ->
-                try {
+            if (path.isDirectory()) {
+                val paths = Files.walk(path).sorted(Comparator.reverseOrder())
+                paths.forEach { file ->
                     file.deleteExisting()
-                } catch (ex: IOException) {
-                    println("Error deleting file: $ex")
                 }
+                println("Deleted folder: $path")
+            } else {
+                Files.delete(path)
+                println("Deleted file: $path")
             }
             return@withContext true
         } catch (ex: IOException) {
-            println("Error deleting folder: $ex")
+            println("Error deleting: $ex")
             return@withContext false
         }
     }
 
-    suspend fun renameFile(path: Path, fromName: String, toName: String): Path? = withContext(Dispatchers.IO) {
+    /**
+     * Rename a file or folder.
+     */
+    suspend fun rename(path: Path, toName: String): Path? = withContext(Dispatchers.IO) {
         try {
-            return@withContext Files.move(Paths.get(path.toString(), fromName), Paths.get(path.toString(), toName))
+            return@withContext Files.move(path, Paths.get(path.parent.toString(), toName))
         } catch (ex: IOException) {
             println("Error renaming file: $ex")
             return@withContext null

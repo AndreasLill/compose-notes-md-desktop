@@ -34,12 +34,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
 
         println("Workspace polling started.")
         while (true) {
-            Files.walk(appState.workspace, 10).filter { (Files.isDirectory(it) && it.toString() != appState.workspace.toString()) || it.extension == "md" }.toList().let {
+            Files.walk(appState.workspace).filter { (Files.isDirectory(it) && it.toString() != appState.workspace.toString()) || it.extension == "md" }.toList().let {
                 directory.clear()
                 directory.addAll(it)
             }
             selectedItem.value?.let { path ->
-                // If the selected item was moved or deleted, set back to null.
                 if (Files.notExists(path))
                     selectedItem.value = null
             }
@@ -148,19 +147,25 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                         Desktop.getDesktop().open(path.parent.toFile())
                     }
                 },
+                onBeginRename = {
+                    selectedItem.value = path
+                    appState.file = path
+                },
                 onRename = {
-                    // TODO with dialog.
+                    scope.launch {
+                        FileHandler.rename(path, it)?.let {
+                            if (!it.isDirectory()) {
+                                appState.file = it
+                            }
+                            selectedItem.value = it
+                            refreshPoll.value = true
+                        }
+                    }
                 },
                 onDelete = {
                     scope.launch {
-                        if (path.isDirectory()) {
-                            FileHandler.deleteFolder(path).let {
-                                refreshPoll.value = true
-                            }
-                        } else {
-                            FileHandler.deleteFile(path).let {
-                                refreshPoll.value = true
-                            }
+                        FileHandler.delete(path).let {
+                            refreshPoll.value = true
                         }
                     }
                 },
