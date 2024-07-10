@@ -7,10 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.LocalTextStyle
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -97,37 +94,46 @@ fun WorkspaceFile(
                                 contentDescription = null,
                                 tint = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                             )
-                            BasicTextField(
-                                modifier = Modifier.focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
-                                    if (!it.isFocused) {
-                                        textField.value = TextFieldValue(path.fileName.toString())
-                                        isRenaming.value = false
-                                    }
-                                }.onPreviewKeyEvent {
-                                    if (it.key == Key.Enter && it.type == KeyEventType.KeyUp && isRenaming.value) {
-                                        onRename(textField.value.text)
-                                        textField.value = TextFieldValue(path.fileName.toString())
-                                        isRenaming.value = false
-                                    }
-                                    false
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+                                BasicTextField(
+                                    modifier = Modifier.focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
+                                        if (!it.isFocused) {
+                                            textField.value = TextFieldValue(path.fileName.toString())
+                                            isRenaming.value = false
+                                        }
+                                    }.onPreviewKeyEvent {
+                                        if (it.key == Key.Enter && it.type == KeyEventType.KeyUp && isRenaming.value) {
+                                            onRename(textField.value.text)
+                                            textField.value = TextFieldValue(textField.value.text)
+                                            isRenaming.value = false
+                                        }
+                                        false
+                                    }.then(
+                                        // Hide text field when not actively renaming.
+                                        if (isRenaming.value) {
+                                            Modifier.fillMaxWidth()
+                                        } else {
+                                            Modifier.width(0.dp)
+                                        }
+                                    ),
+                                    readOnly = !isRenaming.value,
+                                    value = textField.value,
+                                    onValueChange = { textField.value = it },
+                                    singleLine = true,
+                                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                                    textStyle = LocalTextStyle.current.copy(
+                                        color = if (selectedFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                        fontSize = 13.sp,
+                                    ),
+                                )
+                                if (!isRenaming.value) {
+                                    Text(
+                                        text = textField.value.text,
+                                        color = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                        fontSize = 13.sp
+                                    )
                                 }
-                                .then(
-                                    if (isRenaming.value) {
-                                        Modifier.fillMaxWidth()
-                                    } else {
-                                        Modifier
-                                    }
-                                ),
-                                readOnly = !isRenaming.value,
-                                value = textField.value,
-                                onValueChange = { textField.value = it },
-                                singleLine = true,
-                                cursorBrush = SolidColor(MaterialTheme.colors.primary),
-                                textStyle = LocalTextStyle.current.copy(
-                                    color = if (selectedFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
-                                    fontSize = 13.sp,
-                                ),
-                            )
+                            }
                         }
                     }
                 )
