@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 import io.FileHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -43,8 +44,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     selectedItem.value = null
             }
             appState.file?.let { path ->
-                if (Files.notExists(path))
+                if (Files.notExists(path)) {
                     appState.file = null
+                    appState.fileText = TextFieldValue()
+                    appState.fileOriginalText = ""
+                }
             }
             println("${appState.workspace} polled.")
             delay(1000)
@@ -137,16 +141,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                                 scope.launch {
                                     appState.discardChanges()
                                     selectedItem.value = path
-                                    if (path.isDirectory()) {
-                                        if (!openFolders.contains(path)) {
-                                            openFolders.add(path)
-                                        } else {
-                                            openFolders.removeIf {
-                                                it.toString().contains(path.toString())
-                                            }
-                                        }
-                                    }
-                                    else {
+                                    if (path.isDirectory() && !openFolders.contains(path)) {
+                                        openFolders.add(path)
+                                    } else if (path.isDirectory() && openFolders.contains(path)) {
+                                        openFolders.removeIf { it.toString().contains(path.toString()) }
+                                    } else {
                                         appState.file = path
                                     }
                                 }
@@ -155,16 +154,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                                 scope.launch {
                                     appState.saveChanges()
                                     selectedItem.value = path
-                                    if (path.isDirectory()) {
-                                        if (!openFolders.contains(path)) {
-                                            openFolders.add(path)
-                                        } else {
-                                            openFolders.removeIf {
-                                                it.toString().contains(path.toString())
-                                            }
-                                        }
-                                    }
-                                    else {
+                                    if (path.isDirectory() && !openFolders.contains(path)) {
+                                        openFolders.add(path)
+                                    } else if (path.isDirectory() && openFolders.contains(path)) {
+                                        openFolders.removeIf { it.toString().contains(path.toString()) }
+                                    } else {
                                         appState.file = path
                                     }
                                 }
@@ -172,16 +166,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                         )
                     } else  {
                         selectedItem.value = path
-                        if (path.isDirectory()) {
-                            if (!openFolders.contains(path)) {
-                                openFolders.add(path)
-                            } else {
-                                openFolders.removeIf {
-                                    it.toString().contains(path.toString())
-                                }
-                            }
-                        }
-                        else {
+                        if (path.isDirectory() && !openFolders.contains(path)) {
+                            openFolders.add(path)
+                        } else if (path.isDirectory() && openFolders.contains(path)) {
+                            openFolders.removeIf { it.toString().contains(path.toString()) }
+                        } else {
                             appState.file = path
                         }
                     }
@@ -233,39 +222,21 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     }
                 },
                 onDelete = {
-                    if (appState.unsavedChanges) {
-                        appState.confirmDialog.showDialog(
-                            title = "Unsaved Changes",
-                            body = "There are unsaved changes in '${appState.file?.fileName}'\nDo you want to save the changes?",
-                            buttonCancel = "Cancel",
-                            buttonDiscard = "Discard",
-                            buttonConfirm = "Save Changes",
-                            onDiscard = {
-                                appState.discardChanges()
-                            },
-                            onConfirm = {
-                                scope.launch {
-                                    appState.saveChanges()
-                                }
+                    appState.confirmDialog.showDialog(
+                        title = "Delete",
+                        body = "Are you sure you want to delete '${path.fileName}'?\nIt will be moved to the recycle bin.",
+                        buttonCancel = "Cancel",
+                        buttonConfirm = "Delete",
+                        onCancel = {
+                            println("Cancel")
+                        },
+                        onConfirm = {
+                            scope.launch {
+                                FileHandler.delete(path)
+                                refreshPoll.value = true
                             }
-                        )
-                    } else {
-                        appState.confirmDialog.showDialog(
-                            title = "Delete",
-                            body = "Are you sure you want to delete '${path.fileName}'?\nIt will be moved to the recycle bin.",
-                            buttonCancel = "Cancel",
-                            buttonConfirm = "Delete",
-                            onCancel = {
-                                println("Cancel")
-                            },
-                            onConfirm = {
-                                scope.launch {
-                                    FileHandler.delete(path)
-                                    refreshPoll.value = true
-                                }
-                            }
-                        )
-                    }
+                        }
+                    )
                 },
             )
         }
