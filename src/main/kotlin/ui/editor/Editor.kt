@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -20,33 +23,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.FileHandler
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import model.ApplicationState
 import model.EditorState
 import model.enums.Action
-import java.nio.file.Path
 
 @Composable
 fun Editor(appState: ApplicationState) {
     val state = remember { EditorState() }
-    val originalText = remember(appState.file) { mutableStateOf(readFile(appState.file)) }
-    val text = remember(originalText.value) { mutableStateOf(TextFieldValue(originalText.value)) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(originalText.value, text.value.text) {
-        appState.unsavedChanges = originalText.value != text.value.text
+    LaunchedEffect(appState.file) {
+        appState.file?.let {
+            appState.fileOriginalText = FileHandler.readFile(it) ?: ""
+            appState.fileText = TextFieldValue(appState.fileOriginalText)
+        }
+    }
+
+    LaunchedEffect(appState.fileOriginalText, appState.fileText) {
+        appState.unsavedChanges = appState.fileOriginalText != appState.fileText.text
     }
 
     LaunchedEffect(appState.file) {
         appState.event.collect { event ->
-            if (event == Action.SaveChanges) {
-                appState.file?.let { file ->
-                    FileHandler.saveFile(file, text.value.text)
-                    originalText.value = text.value.text
-                }
-            }
-            if (event == Action.DiscardChanges) {
-                text.value = TextFieldValue(originalText.value)
+            if (event == Action.SaveFile) {
+                appState.saveChanges()
             }
         }
     }
@@ -55,8 +55,8 @@ fun Editor(appState: ApplicationState) {
         if (appState.file != null) {
             BasicTextField(
                 modifier = Modifier.fillMaxSize().padding(16.dp),
-                value = text.value,
-                onValueChange = { text.value = it },
+                value = appState.fileText,
+                onValueChange = { appState.fileText = it },
                 textStyle = LocalTextStyle.current.copy(
                     color = MaterialTheme.colors.primary,
                     fontSize = 14.sp,
@@ -65,7 +65,7 @@ fun Editor(appState: ApplicationState) {
                 cursorBrush = SolidColor(MaterialTheme.colors.primary),
                 visualTransformation = {
                     TransformedText(
-                        text = markdownAnnotatedString(state, text.value.text),
+                        text = markdownAnnotatedString(state, appState.fileText.text),
                         offsetMapping = OffsetMapping.Identity
                     )
                 }
@@ -99,7 +99,7 @@ fun Editor(appState: ApplicationState) {
                     Column(modifier = Modifier.align(Alignment.CenterEnd)) {
                         SelectionContainer {
                             Text(
-                                text = if (text.value.selection.length > 0) "${text.value.text.length} characters (${text.value.selection.length} selected)" else "${text.value.text.length} characters",
+                                text = if (appState.fileText.selection.length > 0) "${appState.fileText.text.length} characters (${appState.fileText.selection.length} selected)" else "${appState.fileText.text.length} characters",
                                 fontSize = 12.sp,
                                 maxLines = 1,
                             )
@@ -157,11 +157,4 @@ fun buildLine(builder: AnnotatedString.Builder, style: SpanStyle, text: String, 
  */
 fun isLastLine(index: Int, size: Int): Boolean {
     return index == size - 1
-}
-
-fun readFile(path: Path?): String = runBlocking {
-    path?.let {
-        return@runBlocking FileHandler.readFile(it) ?: ""
-    }
-    return@runBlocking ""
 }

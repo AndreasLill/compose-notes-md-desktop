@@ -135,8 +135,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             buttonConfirm = "Save Changes",
                             onDiscard = {
                                 scope.launch {
-                                    appState.event.emit(Action.DiscardChanges)
-                                    delay(50)
+                                    appState.discardChanges()
                                     selectedItem.value = path
                                     if (path.isDirectory()) {
                                         if (!openFolders.contains(path)) {
@@ -154,8 +153,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             },
                             onConfirm = {
                                 scope.launch {
-                                    appState.event.emit(Action.SaveChanges)
-                                    delay(50)
+                                    appState.saveChanges()
                                     selectedItem.value = path
                                     if (path.isDirectory()) {
                                         if (!openFolders.contains(path)) {
@@ -206,16 +204,14 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             buttonConfirm = "Save Changes",
                             onDiscard = {
                                 scope.launch {
-                                    appState.event.emit(Action.DiscardChanges)
-                                    delay(50)
+                                    appState.discardChanges()
                                     selectedItem.value = path
                                     appState.file = path
                                 }
                             },
                             onConfirm = {
                                 scope.launch {
-                                    appState.event.emit(Action.SaveChanges)
-                                    delay(50)
+                                    appState.saveChanges()
                                     selectedItem.value = path
                                     appState.file = path
                                 }
@@ -247,13 +243,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             buttonDiscard = "Discard",
                             buttonConfirm = "Save Changes",
                             onDiscard = {
-                                scope.launch {
-                                    appState.event.emit(Action.DiscardChanges)
-                                }
+                                appState.discardChanges()
                             },
                             onConfirm = {
                                 scope.launch {
-                                    appState.event.emit(Action.SaveChanges)
+                                    appState.saveChanges()
                                 }
                             }
                         )

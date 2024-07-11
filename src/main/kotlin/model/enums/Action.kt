@@ -1,8 +1,7 @@
 package model.enums
 
 enum class Action {
-    SaveChanges,
-    DiscardChanges,
+    SaveFile,
     NewFile,
     NewFolder,
     ChangeWorkspace,
