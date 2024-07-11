@@ -34,7 +34,6 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
 
         println("Workspace polling started.")
         while (true) {
-            println("${appState.workspace} polled.")
             appState.workspace?.let {
                 val list = FileHandler.walkPathDepthFirst(it, FileHandler.WalkBehavior.FoldersFirst)
                 if (list != directory) {
@@ -54,6 +53,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     appState.fileOriginalText = ""
                 }
             }
+            println("${appState.workspace} polled.")
             delay(1000)
         }
     }
@@ -143,39 +143,39 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             onDiscard = {
                                 scope.launch {
                                     appState.discardChanges()
-                                    selectedItem.value = path
-                                    if (path.isDirectory() && !openFolders.contains(path)) {
+                                    if (path.isDirectory() && !openFolders.contains(path) && selectedItem.value == path) {
                                         openFolders.add(path)
-                                    } else if (path.isDirectory() && openFolders.contains(path)) {
+                                    } else if (path.isDirectory() && openFolders.contains(path) && selectedItem.value == path) {
                                         openFolders.removeIf { it.toString().contains(path.toString()) }
-                                    } else {
+                                    } else if (!path.isDirectory()) {
                                         appState.file = path
                                     }
+                                    selectedItem.value = path
                                 }
                             },
                             onConfirm = {
                                 scope.launch {
                                     appState.saveChanges()
-                                    selectedItem.value = path
-                                    if (path.isDirectory() && !openFolders.contains(path)) {
+                                    if (path.isDirectory() && !openFolders.contains(path) && selectedItem.value == path) {
                                         openFolders.add(path)
-                                    } else if (path.isDirectory() && openFolders.contains(path)) {
+                                    } else if (path.isDirectory() && openFolders.contains(path) && selectedItem.value == path) {
                                         openFolders.removeIf { it.toString().contains(path.toString()) }
-                                    } else {
+                                    } else if (!path.isDirectory()) {
                                         appState.file = path
                                     }
+                                    selectedItem.value = path
                                 }
                             }
                         )
                     } else  {
-                        selectedItem.value = path
-                        if (path.isDirectory() && !openFolders.contains(path)) {
+                        if (path.isDirectory() && !openFolders.contains(path) && selectedItem.value == path) {
                             openFolders.add(path)
-                        } else if (path.isDirectory() && openFolders.contains(path)) {
+                        } else if (path.isDirectory() && openFolders.contains(path) && selectedItem.value == path) {
                             openFolders.removeIf { it.toString().contains(path.toString()) }
-                        } else {
+                        } else if (!path.isDirectory()) {
                             appState.file = path
                         }
+                        selectedItem.value = path
                     }
                 },
                 onOpenInExplorer = {
