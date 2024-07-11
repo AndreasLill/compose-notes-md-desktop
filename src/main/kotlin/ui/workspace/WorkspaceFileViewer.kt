@@ -9,7 +9,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import model.ApplicationState
 import model.enums.Action
-import ui.common.dialog.CommonAlertDialog
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path
@@ -22,8 +21,6 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     val openFolders = remember(appState.workspace) { mutableStateListOf<Path>() }
     val refreshPoll = remember(appState.workspace) { mutableStateOf(false) }
     val selectedItem = remember(appState.workspace) { mutableStateOf<Path?>(null) }
-    val showDeleteDialog = remember { mutableStateOf(false) }
-    val pathPendingDelete = remember { mutableStateOf<Path?>(null) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(appState.workspace, refreshPoll.value) {
@@ -118,28 +115,6 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
         }
     }
 
-    CommonAlertDialog(
-        show = showDeleteDialog.value,
-        title = "Delete",
-        text = "Are you sure you want to delete '${pathPendingDelete.value?.fileName}'?\nIt will be moved to the recycle bin.",
-        confirmButton = "Delete",
-        cancelButton = "Cancel",
-        onConfirm = {
-            pathPendingDelete.value?.let {
-                scope.launch {
-                    FileHandler.delete(it)
-                    refreshPoll.value = true
-                    pathPendingDelete.value = null
-                    showDeleteDialog.value = false
-                }
-            }
-        },
-        onCancel = {
-            showDeleteDialog.value = false
-            pathPendingDelete.value = null
-        }
-    )
-
     Column(modifier = Modifier.fillMaxWidth()) {
         directory.forEach { path ->
             WorkspaceFile(
@@ -151,8 +126,56 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                 selectedFile = appState.file == path,
                 isOpenFolder = openFolders.contains(path),
                 onClick = {
-                    selectedItem.value = path
+                    if (appState.unsavedChanges) {
+                        appState.confirmDialog.showDialog(
+                            title = "Unsaved Changes",
+                            body = "There are unsaved changes in '${appState.file?.fileName}'\nDo you want to save the changes?",
+                            buttonCancel = "Cancel",
+                            buttonDiscard = "Discard",
+                            buttonConfirm = "Save Changes",
+                            onDiscard = {
+                                scope.launch {
+                                    appState.event.emit(Action.DiscardChanges)
+                                    delay(50)
+                                    selectedItem.value = path
+                                    if (path.isDirectory()) {
+                                        if (!openFolders.contains(path)) {
+                                            openFolders.add(path)
+                                        } else {
+                                            openFolders.removeIf {
+                                                it.toString().contains(path.toString())
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        appState.file = path
+                                    }
+                                }
+                            },
+                            onConfirm = {
+                                scope.launch {
+                                    appState.event.emit(Action.SaveChanges)
+                                    delay(50)
+                                    selectedItem.value = path
+                                    if (path.isDirectory()) {
+                                        if (!openFolders.contains(path)) {
+                                            openFolders.add(path)
+                                        } else {
+                                            openFolders.removeIf {
+                                                it.toString().contains(path.toString())
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        appState.file = path
+                                    }
+                                }
+                            }
+                        )
+                        return@WorkspaceFile
+                    }
 
+                    selectedItem.value = path
                     if (path.isDirectory()) {
                         if (!openFolders.contains(path)) {
                             openFolders.add(path)
@@ -174,6 +197,33 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     }
                 },
                 onBeginRename = {
+                    if (appState.unsavedChanges) {
+                        appState.confirmDialog.showDialog(
+                            title = "Unsaved Changes",
+                            body = "There are unsaved changes in '${appState.file?.fileName}'\nDo you want to save the changes?",
+                            buttonCancel = "Cancel",
+                            buttonDiscard = "Discard",
+                            buttonConfirm = "Save Changes",
+                            onDiscard = {
+                                scope.launch {
+                                    appState.event.emit(Action.DiscardChanges)
+                                    delay(50)
+                                    selectedItem.value = path
+                                    appState.file = path
+                                }
+                            },
+                            onConfirm = {
+                                scope.launch {
+                                    appState.event.emit(Action.SaveChanges)
+                                    delay(50)
+                                    selectedItem.value = path
+                                    appState.file = path
+                                }
+                            }
+                        )
+                        return@WorkspaceFile
+                    }
+
                     selectedItem.value = path
                     appState.file = path
                 },
@@ -189,8 +239,42 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     }
                 },
                 onDelete = {
-                    pathPendingDelete.value = path
-                    showDeleteDialog.value = true
+                    if (appState.unsavedChanges) {
+                        appState.confirmDialog.showDialog(
+                            title = "Unsaved Changes",
+                            body = "There are unsaved changes in '${appState.file?.fileName}'\nDo you want to save the changes?",
+                            buttonCancel = "Cancel",
+                            buttonDiscard = "Discard",
+                            buttonConfirm = "Save Changes",
+                            onDiscard = {
+                                scope.launch {
+                                    appState.event.emit(Action.DiscardChanges)
+                                }
+                            },
+                            onConfirm = {
+                                scope.launch {
+                                    appState.event.emit(Action.SaveChanges)
+                                }
+                            }
+                        )
+                        return@WorkspaceFile
+                    }
+
+                    appState.confirmDialog.showDialog(
+                        title = "Delete",
+                        body = "Are you sure you want to delete '${path.fileName}'?\nIt will be moved to the recycle bin.",
+                        buttonCancel = "Cancel",
+                        buttonConfirm = "Delete",
+                        onCancel = {
+                            println("Cancel")
+                        },
+                        onConfirm = {
+                            scope.launch {
+                                FileHandler.delete(path)
+                                refreshPoll.value = true
+                            }
+                        }
+                    )
                 },
             )
         }

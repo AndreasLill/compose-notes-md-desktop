@@ -39,11 +39,14 @@ fun Editor(appState: ApplicationState) {
 
     LaunchedEffect(appState.file) {
         appState.event.collect { event ->
-            if (event == Action.SaveFile) {
+            if (event == Action.SaveChanges) {
                 appState.file?.let { file ->
                     FileHandler.saveFile(file, text.value.text)
                     originalText.value = text.value.text
                 }
+            }
+            if (event == Action.DiscardChanges) {
+                text.value = TextFieldValue(originalText.value)
             }
         }
     }

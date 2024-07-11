@@ -7,6 +7,7 @@ import input.ShortcutHandler
 import io.SaveHandler
 import ui.screen.MainScreen
 import theme.ColorScheme
+import ui.common.dialog.ConfirmDialog
 
 fun main() = application {
     val appState = remember { SaveHandler.loadState() }
@@ -33,6 +34,26 @@ fun main() = application {
         content = {
             MaterialTheme(colors = ColorScheme.Default) {
                 MainScreen(appState)
+                ConfirmDialog(
+                    show = appState.confirmDialog.show,
+                    title = appState.confirmDialog.title,
+                    body = appState.confirmDialog.body,
+                    cancelButton = appState.confirmDialog.buttonCancel,
+                    discardButton = appState.confirmDialog.buttonDiscard,
+                    confirmButton = appState.confirmDialog.buttonConfirm,
+                    onCancel = {
+                        appState.confirmDialog.listenerOnCancel.invoke()
+                        appState.confirmDialog.closeDialog()
+                    },
+                    onDiscard = {
+                        appState.confirmDialog.listenerOnDiscard.invoke()
+                        appState.confirmDialog.closeDialog()
+                    },
+                    onConfirm = {
+                        appState.confirmDialog.listenerOnConfirm.invoke()
+                        appState.confirmDialog.closeDialog()
+                    }
+                )
             }
         }
     )

@@ -16,4 +16,5 @@ class ApplicationState {
     var unsavedChanges by mutableStateOf(false)
     var windowState by mutableStateOf(WindowState())
     val event = MutableSharedFlow<Action>()
+    val confirmDialog = ConfirmDialogState()
 }
