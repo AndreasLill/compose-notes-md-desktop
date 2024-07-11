@@ -1,4 +1,4 @@
-package ui.workspace
+package workspace.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ContextMenuArea

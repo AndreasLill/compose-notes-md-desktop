@@ -3,12 +3,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import input.ShortcutHandler
+import application.input.ShortcutHandler
 import io.SaveHandler
 import kotlinx.coroutines.launch
-import ui.screen.MainScreen
-import theme.ColorScheme
-import ui.common.dialog.ConfirmDialog
+import application.screen.MainScreen
+import application.theme.ColorScheme
+import application.ui.ConfirmDialog
 
 fun main() = application {
     val appState = remember { SaveHandler.loadState() }

@@ -1,4 +1,4 @@
-package model
+package application.model
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

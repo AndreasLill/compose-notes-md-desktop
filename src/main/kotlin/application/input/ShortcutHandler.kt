@@ -1,10 +1,10 @@
-package input
+package application.input
 
 import androidx.compose.ui.input.key.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import model.ApplicationState
-import model.enums.Action
+import application.model.ApplicationState
+import application.model.Action
 
 object ShortcutHandler {
     /**

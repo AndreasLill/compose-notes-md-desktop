@@ -1,4 +1,4 @@
-package ui.workspace
+package workspace.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -16,8 +16,8 @@ import com.example.composenotesmd.desktop.composenotesmd.generated.resources.cre
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.note_add_24dp
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.sync_24dp
 import kotlinx.coroutines.launch
-import model.ApplicationState
-import model.enums.Action
+import application.model.ApplicationState
+import application.model.Action
 import org.jetbrains.compose.resources.painterResource
 
 @Composable

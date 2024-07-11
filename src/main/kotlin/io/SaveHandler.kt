@@ -7,7 +7,7 @@ import androidx.compose.ui.window.WindowState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import model.ApplicationState
+import application.model.ApplicationState
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths

@@ -1,4 +1,4 @@
-package ui.editor
+package editor.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.FileHandler
 import kotlinx.coroutines.launch
-import model.ApplicationState
-import model.EditorState
-import model.enums.Action
+import application.model.ApplicationState
+import editor.model.EditorState
+import application.model.Action
 
 @Composable
 fun Editor(appState: ApplicationState) {

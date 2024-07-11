@@ -1,4 +1,4 @@
-package ui.screen
+package application.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,11 +8,11 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import model.ApplicationState
-import ui.editor.Editor
-import ui.workspace.WorkspaceFileViewer
-import ui.workspace.WorkspacePanel
-import ui.workspace.WorkspacePicker
+import application.model.ApplicationState
+import editor.ui.Editor
+import workspace.ui.WorkspaceFileViewer
+import workspace.ui.WorkspacePanel
+import workspace.ui.WorkspacePicker
 
 @Composable
 fun MainScreen(appState: ApplicationState) {

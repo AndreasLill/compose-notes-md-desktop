@@ -1,4 +1,4 @@
-package ui.workspace
+package workspace.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
-import model.ApplicationState
-import model.enums.Action
+import application.model.ApplicationState
+import application.model.Action
 import java.nio.file.Paths
 
 @Composable

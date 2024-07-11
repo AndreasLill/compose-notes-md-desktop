@@ -1,4 +1,4 @@
-package model.enums
+package application.model
 
 enum class Action {
     SaveFile,

@@ -1,4 +1,4 @@
-package ui.workspace
+package workspace.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,8 +8,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import io.FileHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import model.ApplicationState
-import model.enums.Action
+import application.model.ApplicationState
+import application.model.Action
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path

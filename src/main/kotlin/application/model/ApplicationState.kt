@@ -1,4 +1,4 @@
-package model
+package application.model
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,8 +7,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.WindowState
 import io.FileHandler
 import kotlinx.coroutines.flow.MutableSharedFlow
-import model.enums.Action
-import model.enums.Screen
 import java.nio.file.Path
 
 class ApplicationState {
