@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import model.ApplicationState
 import model.enums.Action
+import ui.common.dialog.CommonAlertDialog
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path
@@ -21,6 +22,8 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     val openFolders = remember(appState.workspace) { mutableStateListOf<Path>() }
     val refreshPoll = remember(appState.workspace) { mutableStateOf(false) }
     val selectedItem = remember(appState.workspace) { mutableStateOf<Path?>(null) }
+    val showDeleteDialog = remember { mutableStateOf(false) }
+    val pathPendingDelete = remember { mutableStateOf<Path?>(null) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(appState.workspace, refreshPoll.value) {
@@ -115,6 +118,28 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
         }
     }
 
+    CommonAlertDialog(
+        show = showDeleteDialog.value,
+        title = "Delete",
+        text = "Are you sure you want to delete '${pathPendingDelete.value?.fileName}'?\nIt will be moved to the recycle bin.",
+        confirmButton = "Delete",
+        cancelButton = "Cancel",
+        onConfirm = {
+            pathPendingDelete.value?.let {
+                scope.launch {
+                    FileHandler.delete(it)
+                    refreshPoll.value = true
+                    pathPendingDelete.value = null
+                    showDeleteDialog.value = false
+                }
+            }
+        },
+        onCancel = {
+            showDeleteDialog.value = false
+            pathPendingDelete.value = null
+        }
+    )
+
     Column(modifier = Modifier.fillMaxWidth()) {
         directory.forEach { path ->
             WorkspaceFile(
@@ -163,11 +188,8 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     }
                 },
                 onDelete = {
-                    scope.launch {
-                        FileHandler.delete(path).let {
-                            refreshPoll.value = true
-                        }
-                    }
+                    pathPendingDelete.value = path
+                    showDeleteDialog.value = true
                 },
             )
         }

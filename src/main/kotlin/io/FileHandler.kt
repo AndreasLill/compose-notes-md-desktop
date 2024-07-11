@@ -2,12 +2,12 @@ package io
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.awt.Desktop
 import java.io.IOException
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.io.path.deleteExisting
 import kotlin.io.path.isDirectory
 
 object FileHandler {
@@ -85,18 +85,19 @@ object FileHandler {
     }
 
     /**
-     * Delete a file or folder and all contents.
+     * Delete a file by moving it to OS recycle bin.
      */
     suspend fun delete(path: Path): Boolean = withContext(Dispatchers.IO) {
         try {
+            val desktop = Desktop.getDesktop()
             if (path.isDirectory()) {
                 val paths = Files.walk(path).sorted(Comparator.reverseOrder())
-                paths.forEach { file ->
-                    file.deleteExisting()
+                paths.forEach {
+                    desktop.moveToTrash(it.toFile())
                 }
                 println("Deleted folder: $path")
             } else {
-                Files.delete(path)
+                desktop.moveToTrash(path.toFile())
                 println("Deleted file: $path")
             }
             return@withContext true
