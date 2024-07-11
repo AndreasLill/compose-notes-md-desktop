@@ -5,6 +5,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import input.ShortcutHandler
 import io.SaveHandler
+import kotlinx.coroutines.launch
 import ui.screen.MainScreen
 import theme.ColorScheme
 import ui.common.dialog.ConfirmDialog
@@ -23,8 +24,30 @@ fun main() = application {
 
     Window(
         onCloseRequest = {
-            SaveHandler.saveState(appState)
-            exitApplication()
+            if (appState.unsavedChanges) {
+                appState.confirmDialog.showDialog(
+                    title = "Unsaved Changes",
+                    body = "There are unsaved changes in '${appState.file?.fileName}'\nDo you want to save the changes?",
+                    buttonCancel = "Cancel",
+                    buttonDiscard = "Discard",
+                    buttonConfirm = "Save Changes",
+                    onDiscard = {
+                        appState.discardChanges()
+                        SaveHandler.saveState(appState)
+                        exitApplication()
+                    },
+                    onConfirm = {
+                        scope.launch {
+                            appState.saveChanges()
+                            SaveHandler.saveState(appState)
+                            exitApplication()
+                        }
+                    }
+                )
+            } else {
+                SaveHandler.saveState(appState)
+                exitApplication()
+            }
         },
         title = windowTitle,
         state = appState.windowState,

@@ -170,21 +170,20 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                                 }
                             }
                         )
-                        return@WorkspaceFile
-                    }
-
-                    selectedItem.value = path
-                    if (path.isDirectory()) {
-                        if (!openFolders.contains(path)) {
-                            openFolders.add(path)
-                        } else {
-                            openFolders.removeIf {
-                                it.toString().contains(path.toString())
+                    } else  {
+                        selectedItem.value = path
+                        if (path.isDirectory()) {
+                            if (!openFolders.contains(path)) {
+                                openFolders.add(path)
+                            } else {
+                                openFolders.removeIf {
+                                    it.toString().contains(path.toString())
+                                }
                             }
                         }
-                    }
-                    else {
-                        appState.file = path
+                        else {
+                            appState.file = path
+                        }
                     }
                 },
                 onOpenInExplorer = {
@@ -217,11 +216,10 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                                 }
                             }
                         )
-                        return@WorkspaceFile
+                    } else {
+                        selectedItem.value = path
+                        appState.file = path
                     }
-
-                    selectedItem.value = path
-                    appState.file = path
                 },
                 onRename = {
                     scope.launch {
@@ -251,24 +249,23 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                                 }
                             }
                         )
-                        return@WorkspaceFile
-                    }
-
-                    appState.confirmDialog.showDialog(
-                        title = "Delete",
-                        body = "Are you sure you want to delete '${path.fileName}'?\nIt will be moved to the recycle bin.",
-                        buttonCancel = "Cancel",
-                        buttonConfirm = "Delete",
-                        onCancel = {
-                            println("Cancel")
-                        },
-                        onConfirm = {
-                            scope.launch {
-                                FileHandler.delete(path)
-                                refreshPoll.value = true
+                    } else {
+                        appState.confirmDialog.showDialog(
+                            title = "Delete",
+                            body = "Are you sure you want to delete '${path.fileName}'?\nIt will be moved to the recycle bin.",
+                            buttonCancel = "Cancel",
+                            buttonConfirm = "Delete",
+                            onCancel = {
+                                println("Cancel")
+                            },
+                            onConfirm = {
+                                scope.launch {
+                                    FileHandler.delete(path)
+                                    refreshPoll.value = true
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 },
             )
         }
