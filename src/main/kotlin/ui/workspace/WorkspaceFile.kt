@@ -38,6 +38,7 @@ fun WorkspaceFile(
     path: Path,
     depth: Int,
     visible: Boolean,
+    unsavedChanges: Boolean,
     selected: Boolean,
     selectedFile: Boolean,
     isOpenFolder: Boolean,
@@ -128,7 +129,7 @@ fun WorkspaceFile(
                                 )
                                 if (!isRenaming.value) {
                                     Text(
-                                        text = textField.value.text,
+                                        text = if (unsavedChanges) "${textField.value.text}*" else textField.value.text,
                                         color = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
                                         fontSize = 13.sp
                                     )

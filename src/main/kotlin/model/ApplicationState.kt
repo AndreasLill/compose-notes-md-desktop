@@ -13,6 +13,7 @@ class ApplicationState {
     var screen by mutableStateOf(Screen.Main)
     var workspace by mutableStateOf<Path?>(null)
     var file by mutableStateOf<Path?>(null)
+    var unsavedChanges by mutableStateOf(false)
     var windowState by mutableStateOf(WindowState())
     val event = MutableSharedFlow<Action>()
 }

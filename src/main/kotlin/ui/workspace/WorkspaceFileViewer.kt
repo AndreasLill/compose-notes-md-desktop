@@ -146,6 +146,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                 path = path,
                 depth = (path.parent.toString().toCharArray().count { it == '\\' } - appState.workspace.toString().toCharArray().count { it == '\\' }),
                 visible = path.parent.toString() == appState.workspace.toString() || openFolders.contains(path.parent),
+                unsavedChanges = appState.file == path && appState.unsavedChanges,
                 selected = selectedItem.value == path,
                 selectedFile = appState.file == path,
                 isOpenFolder = openFolders.contains(path),

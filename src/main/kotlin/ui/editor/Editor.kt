@@ -33,6 +33,10 @@ fun Editor(appState: ApplicationState) {
     val text = remember(originalText.value) { mutableStateOf(TextFieldValue(originalText.value)) }
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(originalText.value, text.value.text) {
+        appState.unsavedChanges = originalText.value != text.value.text
+    }
+
     LaunchedEffect(appState.file) {
         appState.event.collect { event ->
             if (event == Action.SaveFile) {

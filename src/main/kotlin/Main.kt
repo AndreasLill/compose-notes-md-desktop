@@ -10,9 +10,10 @@ import theme.ColorScheme
 
 fun main() = application {
     val appState = remember { SaveHandler.loadState() }
-    val windowTitle = remember(appState.workspace, appState.file) {
+    val windowTitle = remember(appState.workspace, appState.file, appState.unsavedChanges) {
         when {
-            (appState.workspace != null && appState.file != null) -> "Compose Notes - ${appState.workspace} - ${appState.file?.fileName}"
+            (appState.workspace != null && appState.file != null && !appState.unsavedChanges) -> "Compose Notes - ${appState.workspace} - ${appState.file?.fileName}"
+            (appState.workspace != null && appState.file != null && appState.unsavedChanges) -> "Compose Notes - ${appState.workspace} - ${appState.file?.fileName}*"
             (appState.workspace != null && appState.file == null) -> "Compose Notes - ${appState.workspace}"
             else -> "Compose Notes - Select a workspace!"
         }
