@@ -13,7 +13,6 @@ import model.enums.Action
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.extension
 import kotlin.io.path.isDirectory
 
 @Composable
@@ -35,9 +34,14 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
 
         println("Workspace polling started.")
         while (true) {
-            Files.walk(appState.workspace).filter { (Files.isDirectory(it) && it.toString() != appState.workspace.toString()) || it.extension == "md" }.toList().let {
-                directory.clear()
-                directory.addAll(it)
+            println("${appState.workspace} polled.")
+            appState.workspace?.let {
+                val list = FileHandler.walkPathDepthFirst(it, FileHandler.WalkBehavior.FoldersFirst)
+                if (list != directory) {
+                    println("Workspace directory updated.")
+                    directory.clear()
+                    directory.addAll(list)
+                }
             }
             selectedItem.value?.let { path ->
                 if (Files.notExists(path))
@@ -50,7 +54,6 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     appState.fileOriginalText = ""
                 }
             }
-            println("${appState.workspace} polled.")
             delay(1000)
         }
     }

@@ -11,6 +11,11 @@ import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
 object FileHandler {
+    enum class WalkBehavior {
+        FoldersFirst,
+        FilesFirst,
+    }
+
     /**
      * Read all file contents.
      */
@@ -117,5 +122,38 @@ object FileHandler {
             println("Error renaming file: $ex")
             return@withContext null
         }
+    }
+
+    /**
+     * Get a list of files and folder paths by walking a path using depth first traversal recursively.
+     * WalkBehavior decides if the traversal order should be files or folders first.
+     * All files and folders are sorted alphabetically.
+     */
+    suspend fun walkPathDepthFirst(path: Path, behavior: WalkBehavior): List<Path> {
+        val result = mutableListOf<Path>()
+
+        val paths = withContext(Dispatchers.IO) {
+            Files.list(path)
+        }.toList()
+
+        val folders = paths.filter { it.isDirectory() }.sorted()
+        val files = paths.filter { !it.isDirectory() }.sorted()
+
+        if (behavior == WalkBehavior.FoldersFirst) {
+            folders.forEach {
+                result.add(it)
+                result.addAll(walkPathDepthFirst(it, behavior))
+            }
+            result.addAll(files)
+        }
+        if (behavior == WalkBehavior.FilesFirst) {
+            result.addAll(files)
+            folders.forEach {
+                result.add(it)
+                result.addAll(walkPathDepthFirst(it, behavior))
+            }
+        }
+
+        return result
     }
 }
