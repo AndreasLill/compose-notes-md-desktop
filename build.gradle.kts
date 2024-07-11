@@ -21,7 +21,7 @@ dependencies {
     // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
     implementation(compose.components.resources)
-    implementation("com.darkrockstudios:mpfilepicker:3.1.0")
+    implementation("io.github.vinceglb:filekit-compose:0.6.2")
 }
 
 compose.desktop {
