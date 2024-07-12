@@ -5,13 +5,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
+import application.model.ApplicationState
+import io.FileHandler
+import java.nio.file.Path
 
-class EditorState {
+class EditorViewModel(private val appState: ApplicationState) {
     private val colorText by mutableStateOf(Color(0xFFFAFAFA))
     private val colorHeader by mutableStateOf(Color(0xFF81D4FA))
     private val colorList by mutableStateOf(Color(0xFFCE93D8))
     private val colorBlockQuote by mutableStateOf(Color(0xFFA5D6A7))
+
+    fun updateUnsavedChanges() {
+        appState.unsavedChanges = appState.fileOriginalText != appState.fileText.text
+    }
+
+    suspend fun readFile(path: Path?) {
+        path?.let {
+            appState.fileOriginalText = FileHandler.readFile(it) ?: ""
+            appState.fileText = TextFieldValue(appState.fileOriginalText)
+        }
+    }
 
     /**
      * Translates markdown source text to annotated string format used by text field.

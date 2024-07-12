@@ -14,30 +14,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.FileHandler
-import kotlinx.coroutines.launch
-import application.model.ApplicationState
-import editor.model.EditorState
 import application.model.Action
+import application.model.ApplicationState
+import editor.model.EditorViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun Editor(appState: ApplicationState) {
-    val editorState = remember { EditorState() }
+    val viewModel = remember { EditorViewModel(appState) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(appState.file) {
-        appState.file?.let {
-            appState.fileOriginalText = FileHandler.readFile(it) ?: ""
-            appState.fileText = TextFieldValue(appState.fileOriginalText)
-        }
+        viewModel.readFile(appState.file)
     }
 
     LaunchedEffect(appState.fileOriginalText, appState.fileText) {
-        appState.unsavedChanges = appState.fileOriginalText != appState.fileText.text
+        viewModel.updateUnsavedChanges()
     }
 
     LaunchedEffect(appState.file) {
@@ -62,7 +57,7 @@ fun Editor(appState: ApplicationState) {
                 cursorBrush = SolidColor(MaterialTheme.colors.primary),
                 visualTransformation = {
                     TransformedText(
-                        text = editorState.getMarkdownAnnotatedString(appState.fileText.text),
+                        text = viewModel.getMarkdownAnnotatedString(appState.fileText.text),
                         offsetMapping = OffsetMapping.Identity
                     )
                 }
