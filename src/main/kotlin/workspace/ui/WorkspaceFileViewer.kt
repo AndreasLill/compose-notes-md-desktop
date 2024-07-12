@@ -26,7 +26,6 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
         println("${appState.workspace} polling started.")
         while (true) {
             viewModel.updateDirectory()
-            println("${appState.workspace} polled.")
             delay(1000)
         }
     }

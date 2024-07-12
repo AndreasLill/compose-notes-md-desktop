@@ -13,9 +13,19 @@ import java.nio.file.Path
 
 class EditorViewModel(private val appState: ApplicationState) {
     private val colorText by mutableStateOf(Color(0xFFFAFAFA))
-    private val colorHeader by mutableStateOf(Color(0xFF81D4FA))
-    private val colorList by mutableStateOf(Color(0xFFCE93D8))
-    private val colorBlockQuote by mutableStateOf(Color(0xFFA5D6A7))
+    private val colorHeader by mutableStateOf(Color(0xFF40C4FF))
+    private val colorList by mutableStateOf(Color(0xFFB388FF))
+    private val colorBlockQuote by mutableStateOf(Color(0xFF00E676))
+    private val colorUrl by mutableStateOf(Color(0xFFFF80AB))
+    private val colorItalic by mutableStateOf(Color(0xFF18FFFF))
+    private val colorBold by mutableStateOf(Color(0xFF00B8D4))
+
+    companion object {
+        private const val REGEX_URL = "https?://\\S+"
+        private const val REGEX_ITALIC = "\\*[^*]+\\*"
+        private const val REGEX_BOLD = "\\*\\*[^*]+\\*\\*"
+        private val REGEX_GROUPS = Regex("($REGEX_URL)|($REGEX_ITALIC)|($REGEX_BOLD)")
+    }
 
     fun updateUnsavedChanges() {
         appState.unsavedChanges = appState.fileOriginalText != appState.fileText.text
@@ -37,42 +47,83 @@ class EditorViewModel(private val appState: ApplicationState) {
 
         lines.forEachIndexed { index, line ->
             when {
-                line.startsWith("#") -> {
-                    buildLine(builder, SpanStyle(colorHeader), line, !isLastLine(index, lines.size))
+                /**
+                 * Header
+                 */
+                line.startsWith("#") || line.startsWith("##") || line.startsWith("###") || line.startsWith("####") || line.startsWith("#####") || line.startsWith("######") -> {
+                    buildLineAnnotations(builder, SpanStyle(colorHeader), line)
                 }
-                line.startsWith("*") -> {
-                    buildLine(builder, SpanStyle(colorList), line.substring(0, 1))
-                    buildLine(builder, SpanStyle(colorText), line.substring(1, line.length), !isLastLine(index, lines.size))
+                /**
+                 * Unordered List
+                 */
+                line.startsWith("-") || line.startsWith("*") || line.startsWith("+") -> {
+                    builder.withStyle(SpanStyle(colorList)) {
+                        builder.append(line.substring(0, 1))
+                    }
+                    buildLineAnnotations(builder, SpanStyle(colorText), line.substring(1))
                 }
+                /**
+                 * Block Quote
+                 */
                 line.startsWith(">") -> {
-                    buildLine(builder, SpanStyle(colorBlockQuote), line.substring(0, 1))
-                    buildLine(builder, SpanStyle(colorText), line.substring(1, line.length), !isLastLine(index, lines.size))
+                    builder.withStyle(SpanStyle(colorBlockQuote)) {
+                        builder.append(line.substring(0, 1))
+                    }
+                    buildLineAnnotations(builder, SpanStyle(colorText), line.substring(1))
                 }
                 else -> {
-                    buildLine(builder, SpanStyle(colorText), line, !isLastLine(index, lines.size))
+                    buildLineAnnotations(builder, SpanStyle(colorText), line)
                 }
             }
+
+            if (index < lines.size - 1)
+                builder.append("\n")
         }
 
         return builder.toAnnotatedString()
     }
 
-    /**
-     * Builds annotated string with provided style and handles line breaks.
-     */
-    private fun buildLine(builder: AnnotatedString.Builder, style: SpanStyle, text: String, breakLine: Boolean = false) {
-        builder.withStyle(style) {
-            append(text)
+    private fun buildLineAnnotations(builder: AnnotatedString.Builder, baseStyle: SpanStyle, line: String) {
+        val matches = REGEX_GROUPS.findAll(line).toList().sortedBy { it.range.first }
 
-            if (breakLine)
-                append("\n")
+        if (matches.isNotEmpty()) {
+            var lastIndex = 0
+            matches.forEach { match ->
+                builder.withStyle(baseStyle) {
+                    builder.append(line.substring(lastIndex, match.range.first))
+                }
+
+                match.groups[1]?.let {
+                    // URL GROUP
+                    builder.withStyle(SpanStyle(colorUrl)) {
+                        builder.append(match.value)
+                    }
+                }
+                match.groups[2]?.let {
+                    // ITALIC GROUP
+                    builder.withStyle(SpanStyle(colorItalic)) {
+                        builder.append(match.value)
+                    }
+                }
+                match.groups[3]?.let {
+                    // BOLD GROUP
+                    builder.withStyle(SpanStyle(colorBold)) {
+                        builder.append(match.value)
+                    }
+                }
+
+                lastIndex = match.range.last + 1
+            }
+
+            builder.withStyle(baseStyle) {
+                builder.append(line.substring(lastIndex))
+            }
         }
-    }
 
-    /**
-     * Checks if the current index is the last.
-     */
-    private fun isLastLine(index: Int, size: Int): Boolean {
-        return index == size - 1
+        if (matches.isEmpty()) {
+            builder.withStyle(baseStyle) {
+                builder.append(line)
+            }
+        }
     }
 }
