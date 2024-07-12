@@ -2,57 +2,30 @@ package workspace.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
-import io.FileHandler
+import application.model.Action
+import application.model.ApplicationState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import application.model.ApplicationState
-import application.model.Action
-import java.awt.Desktop
-import java.nio.file.Files
-import java.nio.file.Path
-import kotlin.io.path.isDirectory
+import workspace.model.WorkspaceViewModel
 
 @Composable
 fun WorkspaceFileViewer(appState: ApplicationState)  {
-    val directory = remember { mutableStateListOf<Path>() }
-    val openFolders = remember(appState.workspace) { mutableStateListOf<Path>() }
-    val refreshPoll = remember(appState.workspace) { mutableStateOf(false) }
-    val selectedItem = remember(appState.workspace) { mutableStateOf<Path?>(null) }
+    val viewModel = remember(appState.workspace) { WorkspaceViewModel(appState) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(appState.workspace, refreshPoll.value) {
+    LaunchedEffect(appState.workspace) {
         if (appState.workspace == null) {
             return@LaunchedEffect
         }
-        if (refreshPoll.value) {
-            refreshPoll.value = false
-            return@LaunchedEffect
-        }
 
-        println("Workspace polling started.")
+        println("${appState.workspace} polling started.")
         while (true) {
-            appState.workspace?.let {
-                val list = FileHandler.walkPathDepthFirst(it, FileHandler.WalkBehavior.FoldersFirst)
-                if (list != directory) {
-                    println("Workspace directory updated.")
-                    directory.clear()
-                    directory.addAll(list)
-                }
-            }
-            selectedItem.value?.let { path ->
-                if (Files.notExists(path))
-                    selectedItem.value = null
-            }
-            appState.file?.let { path ->
-                if (Files.notExists(path)) {
-                    appState.file = null
-                    appState.fileText = TextFieldValue()
-                    appState.fileOriginalText = ""
-                }
-            }
+            viewModel.updateDirectory()
             println("${appState.workspace} polled.")
             delay(1000)
         }
@@ -64,74 +37,39 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
         }
 
         appState.event.collect { event ->
-            when (event) {
-                Action.NewFile -> {
-                    selectedItem.value?.let { path ->
-                        if (path.isDirectory()) {
-                            FileHandler.createFile(path)?.let {
-                                refreshPoll.value = true
-                                appState.file = it
-                                selectedItem.value = it
-                            }
-                        } else {
-                            FileHandler.createFile(path.parent)?.let {
-                                refreshPoll.value = true
-                                appState.file = it
-                                selectedItem.value = it
-                            }
-                        }
-                        return@collect
-                    }
-                    appState.workspace?.let { path ->
-                        FileHandler.createFile(path)?.let {
-                            refreshPoll.value = true
-                            appState.file = it
-                            selectedItem.value = it
-                        }
-                        return@collect
-                    }
+            if (event == Action.NewFile) {
+                viewModel.selectedItem?.let { path ->
+                    viewModel.createFile(path)
+                    return@collect
                 }
-                Action.NewFolder -> {
-                    selectedItem.value?.let { path ->
-                        if (path.isDirectory()) {
-                            FileHandler.createFolder(path)?.let {
-                                refreshPoll.value = true
-                                selectedItem.value = it
-                                openFolders.add(it)
-                            }
-                        } else {
-                            FileHandler.createFolder(path.parent)?.let {
-                                refreshPoll.value = true
-                                selectedItem.value = it
-                                openFolders.add(it)
-                            }
-                        }
-                        return@collect
-                    }
-                    appState.workspace?.let { path ->
-                        FileHandler.createFolder(path)?.let {
-                            refreshPoll.value = true
-                            selectedItem.value = it
-                            openFolders.add(it)
-                        }
-                        return@collect
-                    }
+                appState.workspace?.let { path ->
+                    viewModel.createFile(path)
+                    return@collect
                 }
-                else -> {}
+            }
+            if (event == Action.NewFolder) {
+                viewModel.selectedItem?.let { path ->
+                    viewModel.createFolder(path)
+                    return@collect
+                }
+                appState.workspace?.let { path ->
+                    viewModel.createFolder(path)
+                    return@collect
+                }
             }
         }
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        directory.forEach { path ->
+        viewModel.directory.forEach { path ->
             WorkspaceFile(
                 path = path,
                 depth = (path.parent.toString().toCharArray().count { it == '\\' } - appState.workspace.toString().toCharArray().count { it == '\\' }),
-                visible = path.parent.toString() == appState.workspace.toString() || openFolders.contains(path.parent),
+                visible = path.parent.toString() == appState.workspace.toString() || viewModel.openFolders.contains(path.parent),
                 unsavedChanges = appState.file == path && appState.unsavedChanges,
-                selected = selectedItem.value == path,
+                selected = viewModel.selectedItem == path,
                 selectedFile = appState.file == path,
-                isOpenFolder = openFolders.contains(path),
+                isOpenFolder = viewModel.openFolders.contains(path),
                 onClick = {
                     if (appState.unsavedChanges) {
                         appState.confirmDialog.showDialog(
@@ -143,47 +81,22 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             onDiscard = {
                                 scope.launch {
                                     appState.discardChanges()
-                                    if (path.isDirectory() && !openFolders.contains(path) && selectedItem.value == path) {
-                                        openFolders.add(path)
-                                    } else if (path.isDirectory() && openFolders.contains(path) && selectedItem.value == path) {
-                                        openFolders.removeIf { it.toString().contains(path.toString()) }
-                                    } else if (!path.isDirectory()) {
-                                        appState.file = path
-                                    }
-                                    selectedItem.value = path
+                                    viewModel.selectItem(path)
                                 }
                             },
                             onConfirm = {
                                 scope.launch {
                                     appState.saveChanges()
-                                    if (path.isDirectory() && !openFolders.contains(path) && selectedItem.value == path) {
-                                        openFolders.add(path)
-                                    } else if (path.isDirectory() && openFolders.contains(path) && selectedItem.value == path) {
-                                        openFolders.removeIf { it.toString().contains(path.toString()) }
-                                    } else if (!path.isDirectory()) {
-                                        appState.file = path
-                                    }
-                                    selectedItem.value = path
+                                    viewModel.selectItem(path)
                                 }
                             }
                         )
                     } else  {
-                        if (path.isDirectory() && !openFolders.contains(path) && selectedItem.value == path) {
-                            openFolders.add(path)
-                        } else if (path.isDirectory() && openFolders.contains(path) && selectedItem.value == path) {
-                            openFolders.removeIf { it.toString().contains(path.toString()) }
-                        } else if (!path.isDirectory()) {
-                            appState.file = path
-                        }
-                        selectedItem.value = path
+                        viewModel.selectItem(path)
                     }
                 },
                 onOpenInExplorer = {
-                    if (path.isDirectory()) {
-                        Desktop.getDesktop().open(path.toFile())
-                    } else {
-                        Desktop.getDesktop().open(path.parent.toFile())
-                    }
+                    viewModel.openInExplorer(path)
                 },
                 onBeginRename = {
                     if (appState.unsavedChanges) {
@@ -196,32 +109,26 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             onDiscard = {
                                 scope.launch {
                                     appState.discardChanges()
-                                    selectedItem.value = path
+                                    viewModel.selectedItem = path
                                     appState.file = path
                                 }
                             },
                             onConfirm = {
                                 scope.launch {
                                     appState.saveChanges()
-                                    selectedItem.value = path
+                                    viewModel.selectedItem = path
                                     appState.file = path
                                 }
                             }
                         )
                     } else {
-                        selectedItem.value = path
+                        viewModel.selectedItem = path
                         appState.file = path
                     }
                 },
                 onRename = {
                     scope.launch {
-                        FileHandler.rename(path, it)?.let {
-                            if (!it.isDirectory()) {
-                                appState.file = it
-                            }
-                            selectedItem.value = it
-                            refreshPoll.value = true
-                        }
+                        viewModel.renamePath(path, it)
                     }
                 },
                 onDelete = {
@@ -235,8 +142,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                         },
                         onConfirm = {
                             scope.launch {
-                                FileHandler.delete(path)
-                                refreshPoll.value = true
+                                viewModel.deletePath(path)
                             }
                         }
                     )
