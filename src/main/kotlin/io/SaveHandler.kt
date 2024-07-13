@@ -23,6 +23,7 @@ object SaveHandler {
             configFile.createNewFile()
 
             val builder = StringBuilder()
+            builder.appendLine("editor_font_size=${appState.editorFontSize}")
             appState.workspace?.let {
                 builder.appendLine("workspace=$it")
             }
@@ -63,6 +64,9 @@ object SaveHandler {
                 val value = pair[1]
 
                 when(key) {
+                    "editor_font_size" -> {
+                        appState.editorFontSize = value.toInt()
+                    }
                     "workspace" -> {
                         Paths.get(value).let { path ->
                             if (Files.exists(path)) {

@@ -10,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontFamily
@@ -34,7 +36,10 @@ fun Editor(appState: ApplicationState) {
         viewModel.showTextField = false
         viewModel.readFile(appState.file)
 
-        // Tiny delay required to clear the undo queue in text field by hiding and showing it, recreating the composable. (maybe there is a better way to clear it?)
+        /**
+         * Tiny delay required to recreate the composable by hiding and showing, thus clearing the undo queue in text field.
+         * Maybe there is a better way to clear it in a future compose version?
+         */
         delay(1)
         viewModel.showTextField = true
     }
@@ -59,8 +64,9 @@ fun Editor(appState: ApplicationState) {
                 onValueChange = { appState.fileText = it },
                 textStyle = LocalTextStyle.current.copy(
                     color = MaterialTheme.colors.primary,
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace
+                    fontSize = appState.editorFontSize.sp,
+                    lineHeight = (appState.editorFontSize * 1.75f).sp,
+                    fontFamily = FontFamily.Monospace,
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colors.primary),
                 visualTransformation = {
@@ -78,7 +84,7 @@ fun Editor(appState: ApplicationState) {
                      * Only active when CTRL is pressed in application.
                      */
                     if (appState.isCtrlPressed) {
-                        Box(modifier = Modifier.pointerInput(Unit) {
+                        Box(modifier = Modifier.pointerHoverIcon(PointerIcon.Default).pointerInput(Unit) {
                             detectTapGestures { offset ->
                                 layoutResult.value?.let { layout ->
                                     val position = layout.getOffsetForPosition(offset)

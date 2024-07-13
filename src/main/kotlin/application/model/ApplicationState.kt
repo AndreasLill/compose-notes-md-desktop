@@ -15,6 +15,7 @@ class ApplicationState {
     var file by mutableStateOf<Path?>(null)
     var fileText by mutableStateOf(TextFieldValue(""))
     var fileOriginalText by mutableStateOf("")
+    var editorFontSize by mutableStateOf(14)
     var unsavedChanges by mutableStateOf(false)
     var windowState by mutableStateOf(WindowState())
     val event = MutableSharedFlow<Action>()

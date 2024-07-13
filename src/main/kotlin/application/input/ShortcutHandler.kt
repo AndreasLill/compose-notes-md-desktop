@@ -13,16 +13,38 @@ object ShortcutHandler {
     fun event(scope: CoroutineScope, appState: ApplicationState, keyEvent: KeyEvent): Boolean {
         appState.isCtrlPressed = keyEvent.isCtrlPressed
         when {
+            /**
+             * Save File - CTRL + S
+             */
             keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.S) && appState.file != null -> {
                 scope.launch {
                     appState.event.emit(Action.SaveFile)
                 }
                 return true
             }
+            /**
+             * New File - CTRL + N
+             */
             keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.N) && appState.workspace != null -> {
                 scope.launch {
                     appState.event.emit(Action.NewFile)
                 }
+                return true
+            }
+            /**
+             * Editor - Increase Font - CTRL + PageUp
+             */
+            keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.PageUp) && appState.file != null -> {
+
+                appState.editorFontSize = appState.editorFontSize.plus(1).coerceIn(6, 64)
+                return true
+            }
+            /**
+             * Editor - Decrease Font - CTRL + PageDown
+             */
+            keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.PageDown) && appState.file != null -> {
+
+                appState.editorFontSize = appState.editorFontSize.minus(1).coerceIn(6, 64)
                 return true
             }
             else -> return false
