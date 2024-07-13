@@ -2,6 +2,7 @@ package editor.model
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -24,6 +25,7 @@ class EditorViewModel(private val appState: ApplicationState) {
     private val colorUrl by mutableStateOf(Color(0xFFFF80AB))
     private val colorItalic by mutableStateOf(Color(0xFF18FFFF))
     private val colorBold by mutableStateOf(Color(0xFF00B8D4))
+    var showTextField by mutableStateOf(false)
 
     companion object {
         private const val REGEX_URL = "https?://\\S+"

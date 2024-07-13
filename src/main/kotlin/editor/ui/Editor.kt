@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import application.model.Action
 import application.model.ApplicationState
 import editor.model.EditorViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -30,7 +31,12 @@ fun Editor(appState: ApplicationState) {
     val annotatedString = remember { derivedStateOf { viewModel.getMarkdownAnnotatedString(appState.fileText.text) } }
 
     LaunchedEffect(appState.file) {
+        viewModel.showTextField = false
         viewModel.readFile(appState.file)
+
+        // Tiny delay required to clear the undo queue in text field by hiding and showing it, recreating the composable. (maybe there is a better way to clear it?)
+        delay(1)
+        viewModel.showTextField = true
     }
 
     LaunchedEffect(appState.fileOriginalText, appState.fileText) {
@@ -46,7 +52,7 @@ fun Editor(appState: ApplicationState) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (appState.file != null) {
+        if (viewModel.showTextField) {
             BasicTextField(
                 modifier = Modifier.fillMaxSize().padding(16.dp),
                 value = appState.fileText,
@@ -79,6 +85,7 @@ fun Editor(appState: ApplicationState) {
                                     annotatedString.value.getStringAnnotations(position, position).firstOrNull()?.let { annotation ->
                                         if (annotation.tag == "URL") {
                                             viewModel.openInBrowser(annotation.item)
+                                            appState.isCtrlPressed = false
                                         }
                                     }
                                 }
