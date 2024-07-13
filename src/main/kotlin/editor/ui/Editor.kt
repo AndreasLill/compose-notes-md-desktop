@@ -8,11 +8,10 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.OffsetMapping
@@ -25,12 +24,14 @@ import editor.model.EditorViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun Editor(appState: ApplicationState) {
     val viewModel = remember { EditorViewModel(appState) }
     val scope = rememberCoroutineScope()
     val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
     val annotatedString = remember { derivedStateOf { viewModel.getMarkdownAnnotatedString(appState.fileText.text) } }
+    val pointerIcon = remember { mutableStateOf(PointerIcon.Default) }
 
     LaunchedEffect(appState.file) {
         viewModel.showTextField = false
@@ -84,7 +85,17 @@ fun Editor(appState: ApplicationState) {
                      * Only active when CTRL is pressed in application.
                      */
                     if (appState.isCtrlPressed) {
-                        Box(modifier = Modifier.pointerHoverIcon(PointerIcon.Default).pointerInput(Unit) {
+                        Box(modifier = Modifier.pointerHoverIcon(pointerIcon.value).onPointerEvent(PointerEventType.Move) { event ->
+                            layoutResult.value?.let { layout ->
+                                val position = layout.getOffsetForPosition(event.changes.first().position)
+                                val annotation = annotatedString.value.getStringAnnotations(position, position).firstOrNull()
+                                if (annotation?.tag == "URL") {
+                                    pointerIcon.value = PointerIcon.Hand
+                                } else {
+                                    pointerIcon.value = PointerIcon.Default
+                                }
+                            }
+                        }.pointerInput(Unit) {
                             detectTapGestures { offset ->
                                 layoutResult.value?.let { layout ->
                                     val position = layout.getOffsetForPosition(offset)
