@@ -5,17 +5,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import application.model.ApplicationState
 import io.FileHandler
+import java.awt.Desktop
+import java.net.URI
 import java.nio.file.Path
 
 class EditorViewModel(private val appState: ApplicationState) {
     private val colorText by mutableStateOf(Color(0xFFFAFAFA))
     private val colorHeader by mutableStateOf(Color(0xFF40C4FF))
-    private val colorList by mutableStateOf(Color(0xFFB388FF))
-    private val colorBlockQuote by mutableStateOf(Color(0xFF00E676))
+    private val colorList by mutableStateOf(Color(0xFFEA80FC))
+    private val colorBlockQuote by mutableStateOf(Color(0xFFB2FF59))
     private val colorUrl by mutableStateOf(Color(0xFFFF80AB))
     private val colorItalic by mutableStateOf(Color(0xFF18FFFF))
     private val colorBold by mutableStateOf(Color(0xFF00B8D4))
@@ -27,15 +32,19 @@ class EditorViewModel(private val appState: ApplicationState) {
         private val REGEX_GROUPS = Regex("($REGEX_URL)|($REGEX_ITALIC)|($REGEX_BOLD)")
     }
 
-    fun updateUnsavedChanges() {
-        appState.unsavedChanges = appState.fileOriginalText != appState.fileText.text
-    }
-
     suspend fun readFile(path: Path?) {
         path?.let {
             appState.fileOriginalText = FileHandler.readFile(it) ?: ""
             appState.fileText = TextFieldValue(appState.fileOriginalText)
         }
+    }
+
+    fun updateUnsavedChanges() {
+        appState.unsavedChanges = appState.fileOriginalText != appState.fileText.text
+    }
+
+    fun openInBrowser(uri: String) {
+        Desktop.getDesktop().browse(URI(uri))
     }
 
     /**
@@ -93,21 +102,29 @@ class EditorViewModel(private val appState: ApplicationState) {
                     builder.append(line.substring(lastIndex, match.range.first))
                 }
 
+                /**
+                 * URL Group
+                 */
                 match.groups[1]?.let {
-                    // URL GROUP
-                    builder.withStyle(SpanStyle(colorUrl)) {
+                    builder.pushStringAnnotation("URL", match.value)
+                    builder.withStyle(SpanStyle(colorUrl, textDecoration = TextDecoration.Underline)) {
                         builder.append(match.value)
                     }
+                    builder.pop()
                 }
+                /**
+                 * Italic Group
+                 */
                 match.groups[2]?.let {
-                    // ITALIC GROUP
-                    builder.withStyle(SpanStyle(colorItalic)) {
+                    builder.withStyle(SpanStyle(color = colorItalic, fontStyle = FontStyle.Italic)) {
                         builder.append(match.value)
                     }
                 }
+                /**
+                 * Bold Group
+                 */
                 match.groups[3]?.let {
-                    // BOLD GROUP
-                    builder.withStyle(SpanStyle(colorBold)) {
+                    builder.withStyle(SpanStyle(color = colorBold, fontWeight = FontWeight.Bold)) {
                         builder.append(match.value)
                     }
                 }

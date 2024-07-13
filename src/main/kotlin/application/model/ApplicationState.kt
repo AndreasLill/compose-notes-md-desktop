@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import java.nio.file.Path
 
 class ApplicationState {
-    var screen by mutableStateOf(Screen.Main)
+    var isCtrlPressed by mutableStateOf(false)
     var workspace by mutableStateOf<Path?>(null)
     var file by mutableStateOf<Path?>(null)
     var fileText by mutableStateOf(TextFieldValue(""))

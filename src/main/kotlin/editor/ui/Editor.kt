@@ -1,17 +1,17 @@
 package editor.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
@@ -26,6 +26,8 @@ import kotlinx.coroutines.launch
 fun Editor(appState: ApplicationState) {
     val viewModel = remember { EditorViewModel(appState) }
     val scope = rememberCoroutineScope()
+    val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
+    val annotatedString = remember { derivedStateOf { viewModel.getMarkdownAnnotatedString(appState.fileText.text) } }
 
     LaunchedEffect(appState.file) {
         viewModel.readFile(appState.file)
@@ -57,10 +59,35 @@ fun Editor(appState: ApplicationState) {
                 cursorBrush = SolidColor(MaterialTheme.colors.primary),
                 visualTransformation = {
                     TransformedText(
-                        text = viewModel.getMarkdownAnnotatedString(appState.fileText.text),
+                        text = annotatedString.value,
                         offsetMapping = OffsetMapping.Identity
                     )
+                },
+                onTextLayout = {
+                    layoutResult.value = it
+                },
+                decorationBox = { innerTextField ->
+                    /**
+                     * Pointer input capture box for catching annotated urls.
+                     * Only active when CTRL is pressed in application.
+                     */
+                    if (appState.isCtrlPressed) {
+                        Box(modifier = Modifier.pointerInput(Unit) {
+                            detectTapGestures { offset ->
+                                layoutResult.value?.let { layout ->
+                                    val position = layout.getOffsetForPosition(offset)
+                                    annotatedString.value.getStringAnnotations(position, position).firstOrNull()?.let { annotation ->
+                                        if (annotation.tag == "URL") {
+                                            viewModel.openInBrowser(annotation.item)
+                                        }
+                                    }
+                                }
+                            }
+                        })
+                    }
+                    innerTextField()
                 }
+
             )
         }
         if (appState.workspace != null && appState.file == null) {

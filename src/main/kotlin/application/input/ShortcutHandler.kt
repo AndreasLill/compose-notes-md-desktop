@@ -11,6 +11,7 @@ object ShortcutHandler {
      * Shortcuts for app key events.
      */
     fun event(scope: CoroutineScope, appState: ApplicationState, keyEvent: KeyEvent): Boolean {
+        appState.isCtrlPressed = keyEvent.isCtrlPressed
         when {
             keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.S) && appState.file != null -> {
                 scope.launch {
