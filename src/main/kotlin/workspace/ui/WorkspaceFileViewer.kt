@@ -1,7 +1,10 @@
 package workspace.ui
 
+import androidx.compose.foundation.ContextMenuArea
+import androidx.compose.foundation.ContextMenuItem
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -37,37 +40,26 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
 
         appState.event.collect { event ->
             if (event == Action.NewFile) {
-                viewModel.selectedItem?.let { path ->
-                    viewModel.createFile(path)
-                    return@collect
-                }
                 appState.workspace?.let { path ->
                     viewModel.createFile(path)
-                    return@collect
                 }
             }
             if (event == Action.NewFolder) {
-                viewModel.selectedItem?.let { path ->
-                    viewModel.createFolder(path)
-                    return@collect
-                }
                 appState.workspace?.let { path ->
                     viewModel.createFolder(path)
-                    return@collect
                 }
             }
         }
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         viewModel.directory.forEach { path ->
             WorkspaceFile(
                 path = path,
                 depth = (path.parent.toString().toCharArray().count { it == '\\' } - appState.workspace.toString().toCharArray().count { it == '\\' }),
                 visible = path.parent.toString() == appState.workspace.toString() || viewModel.openFolders.contains(path.parent),
                 unsavedChanges = appState.file == path && appState.unsavedChanges,
-                selected = viewModel.selectedItem == path,
-                selectedFile = appState.file == path,
+                isOpenFile = appState.file == path,
                 isOpenFolder = viewModel.openFolders.contains(path),
                 onClick = {
                     if (appState.unsavedChanges) {
@@ -94,6 +86,16 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                         viewModel.selectItem(path)
                     }
                 },
+                onNewFile = {
+                    scope.launch {
+                        viewModel.createFile(path)
+                    }
+                },
+                onNewFolder = {
+                    scope.launch {
+                        viewModel.createFolder(path)
+                    }
+                },
                 onOpenInExplorer = {
                     viewModel.openInExplorer(path)
                 },
@@ -108,20 +110,17 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                             onDiscard = {
                                 scope.launch {
                                     appState.discardChanges()
-                                    viewModel.selectedItem = path
                                     appState.file = path
                                 }
                             },
                             onConfirm = {
                                 scope.launch {
                                     appState.saveChanges()
-                                    viewModel.selectedItem = path
                                     appState.file = path
                                 }
                             }
                         )
                     } else {
-                        viewModel.selectedItem = path
                         appState.file = path
                     }
                 },
@@ -148,5 +147,42 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                 },
             )
         }
+        ContextMenuArea(
+            items = {
+                listOf(
+                    ContextMenuItem(
+                        label = "New File",
+                        onClick = {
+                            scope.launch {
+                                appState.workspace?.let {
+                                    viewModel.createFile(it)
+                                }
+                            }
+                        },
+                    ),
+                    ContextMenuItem(
+                        label = "New Folder",
+                        onClick = {
+                            scope.launch {
+                                appState.workspace?.let {
+                                    viewModel.createFolder(it)
+                                }
+                            }
+                        },
+                    ),
+                    ContextMenuItem(
+                        label = "Open In Explorer",
+                        onClick = {
+                            appState.workspace?.let {
+                                viewModel.openInExplorer(it)
+                            }
+                        },
+                    ),
+                )
+            },
+            content = {
+                Box(modifier = Modifier.fillMaxSize())
+            }
+        )
     }
 }

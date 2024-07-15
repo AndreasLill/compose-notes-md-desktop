@@ -1,9 +1,6 @@
 package workspace.model
 
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
 import application.model.ApplicationState
 import io.FileHandler
@@ -15,17 +12,15 @@ import kotlin.io.path.isDirectory
 class WorkspaceViewModel(private val appState: ApplicationState) {
     val directory = mutableStateListOf<Path>()
     val openFolders = mutableStateListOf<Path>()
-    var selectedItem by mutableStateOf<Path?>(null)
 
     fun selectItem(path: Path) {
-        if (path.isDirectory() && !openFolders.contains(path) && selectedItem == path) {
+        if (path.isDirectory() && !openFolders.contains(path)) {
             openFolders.add(path)
-        } else if (path.isDirectory() && openFolders.contains(path) && selectedItem == path) {
+        } else if (path.isDirectory() && openFolders.contains(path)) {
             openFolders.removeIf { it.toString().contains(path.toString()) }
         } else if (!path.isDirectory()) {
             appState.file = path
         }
-        selectedItem = path
     }
 
     fun openInExplorer(path: Path) {
@@ -37,7 +32,6 @@ class WorkspaceViewModel(private val appState: ApplicationState) {
         val dirPath = if (path.isDirectory()) path else path.parent
         FileHandler.createFile(dirPath)?.let {
             updateDirectory()
-            selectedItem = it
             appState.file = it
         }
     }
@@ -46,7 +40,6 @@ class WorkspaceViewModel(private val appState: ApplicationState) {
         val dirPath = if (path.isDirectory()) path else path.parent
         FileHandler.createFolder(dirPath)?.let {
             updateDirectory()
-            selectedItem = it
             openFolders.add(it)
         }
     }
@@ -61,7 +54,6 @@ class WorkspaceViewModel(private val appState: ApplicationState) {
             if (!it.isDirectory()) {
                 appState.file = it
             }
-            selectedItem = it
             updateDirectory()
         }
     }
@@ -74,10 +66,6 @@ class WorkspaceViewModel(private val appState: ApplicationState) {
                 directory.clear()
                 directory.addAll(list)
             }
-        }
-        selectedItem?.let { path ->
-            if (Files.notExists(path))
-                selectedItem = null
         }
         appState.file?.let { path ->
             if (Files.notExists(path)) {

@@ -125,6 +125,19 @@ object FileHandler {
     }
 
     /**
+     * Move a file or folder.
+     */
+    suspend fun move(path: Path, toPath: Path): Path? = withContext(Dispatchers.IO) {
+        try {
+            val targetDir = if (toPath.isDirectory()) toPath.toString() else toPath.parent.toString()
+            return@withContext Files.move(path, Paths.get(targetDir, path.fileName.toString()))
+        } catch (ex: IOException) {
+            println("Error moving file: $ex")
+            return@withContext null
+        }
+    }
+
+    /**
      * Get a list of files and folder paths by walking a path using depth first traversal recursively.
      * WalkBehavior decides if the traversal order should be files or folders first.
      * All files and folders are sorted alphabetically.

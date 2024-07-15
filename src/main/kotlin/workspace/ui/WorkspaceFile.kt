@@ -1,9 +1,6 @@
 package workspace.ui
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ContextMenuArea
-import androidx.compose.foundation.ContextMenuItem
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -39,10 +36,11 @@ fun WorkspaceFile(
     depth: Int,
     visible: Boolean,
     unsavedChanges: Boolean,
-    selected: Boolean,
-    selectedFile: Boolean,
+    isOpenFile: Boolean,
     isOpenFolder: Boolean,
     onClick: () -> Unit,
+    onNewFile: () -> Unit,
+    onNewFolder: () -> Unit,
     onOpenInExplorer: () -> Unit,
     onBeginRename: () -> Unit,
     onRename: (String) -> Unit,
@@ -51,10 +49,21 @@ fun WorkspaceFile(
     val isRenaming = remember { mutableStateOf(false) }
     val textField = remember(path) { mutableStateOf(TextFieldValue(path.fileName.toString())) }
     val focusRequester = remember { FocusRequester() }
+    val contextMenuState = remember { ContextMenuState() }
+
     if (visible) {
         ContextMenuArea(
+            state = contextMenuState,
             items = {
                 listOf(
+                    ContextMenuItem(
+                        label = "New File",
+                        onClick = onNewFile,
+                    ),
+                    ContextMenuItem(
+                        label = "New Folder",
+                        onClick = onNewFolder,
+                    ),
                     ContextMenuItem(
                         label = "Open In Explorer",
                         onClick = onOpenInExplorer,
@@ -76,11 +85,9 @@ fun WorkspaceFile(
             },
             content = {
                 Card(
-                    modifier = Modifier.fillMaxWidth().height(36.dp).clickable {
-                        onClick()
-                    },
-                    border = BorderStroke(1.dp, if (selected) MaterialTheme.colors.primary.copy(0.5f) else Color.Transparent),
-                    backgroundColor = if (selectedFile) MaterialTheme.colors.primary.copy(0.1f) else Color.Transparent,
+                    modifier = Modifier.fillMaxWidth().height(36.dp).clickable(onClick = onClick),
+                    border = BorderStroke(1.dp, if (contextMenuState.status != ContextMenuState.Status.Closed) MaterialTheme.colors.primary.copy(0.5f) else Color.Transparent),
+                    backgroundColor = if (isOpenFile) MaterialTheme.colors.primary.copy(0.1f) else Color.Transparent,
                     shape = RoundedCornerShape(2.dp),
                     elevation = 0.dp,
                     content = {
@@ -93,7 +100,7 @@ fun WorkspaceFile(
                                 modifier = Modifier.size(16.dp),
                                 painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.folder_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.folder_open_24dp) else painterResource(Res.drawable.description_24dp),
                                 contentDescription = null,
-                                tint = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+                                tint = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                             )
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
                                 BasicTextField(
@@ -123,14 +130,14 @@ fun WorkspaceFile(
                                     singleLine = true,
                                     cursorBrush = SolidColor(MaterialTheme.colors.primary),
                                     textStyle = LocalTextStyle.current.copy(
-                                        color = if (selectedFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                        color = if (isOpenFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
                                         fontSize = 13.sp,
                                     ),
                                 )
                                 if (!isRenaming.value) {
                                     Text(
                                         text = if (unsavedChanges) "${textField.value.text}*" else textField.value.text,
-                                        color = if (selectedFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                        color = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
                                         fontSize = 13.sp
                                     )
                                 }
