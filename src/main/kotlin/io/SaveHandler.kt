@@ -4,23 +4,19 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
+import application.model.ApplicationState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import application.model.ApplicationState
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
 object SaveHandler {
     private val HOME = System.getProperty("user.home")
-    private val PATH = "$HOME/.config/ComposeNotesMD/app.conf"
+    private val PATH = "$HOME/.config/ComposeNotes/app.conf"
 
     fun saveState(appState: ApplicationState) = runBlocking {
         withContext(Dispatchers.IO) {
-            val configFile = File(PATH)
-            configFile.parentFile.mkdirs()
-            configFile.createNewFile()
 
             val builder = StringBuilder()
             builder.appendLine("editor_font_size=${appState.editorFontSize}")
@@ -36,30 +32,31 @@ object SaveHandler {
                 builder.appendLine("window_pos_x=${it.position.x.value.toInt()}")
                 builder.appendLine("window_pos_y=${it.position.y.value.toInt()}")
             }
-            configFile.bufferedWriter().use {
-                it.write(builder.toString())
+
+            val path = Paths.get(PATH)
+
+            if (!Files.exists(path)) {
+                Files.createDirectories(path.parent)
+                Files.createFile(path)
             }
+
+            Files.writeString(path, builder.toString())
             println("Saved state")
         }
     }
 
     fun loadState(): ApplicationState {
         try {
-            val configFile = File(PATH)
             val appState = ApplicationState()
-            val lines: List<String>
+            val path = Paths.get(PATH)
 
             var windowWidth = 1200
             var windowHeight = 900
             var windowPosX = 0
             var windowPosY = 0
 
-            configFile.bufferedReader().use {
-                lines = it.readLines()
-            }
-
-            lines.forEach {
-                val pair = it.split("=", limit = 2)
+            Files.readAllLines(path).forEach { line ->
+                val pair = line.split("=", limit = 2)
                 val key = pair[0]
                 val value = pair[1]
 

@@ -34,6 +34,9 @@ fun Editor(appState: ApplicationState) {
     val pointerIcon = remember { mutableStateOf(PointerIcon.Default) }
 
     LaunchedEffect(appState.file) {
+        if (appState.file == null)
+            return@LaunchedEffect
+
         viewModel.showTextField = false
         viewModel.readFile(appState.file)
 
