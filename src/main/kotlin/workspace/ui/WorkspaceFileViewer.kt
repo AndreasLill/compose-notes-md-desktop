@@ -22,7 +22,11 @@ import workspace.model.WorkspaceViewModel
 @Composable
 fun WorkspaceFileViewer(appState: ApplicationState)  {
     val viewModel = remember(appState.workspace) { WorkspaceViewModel(appState) }
-    val filteredDirectory = remember { derivedStateOf { viewModel.directory.filter { it.parent == appState.workspace || viewModel.openFolders.contains(it.parent) } } }
+    val filteredDirectory = remember(appState.workspace) {
+        derivedStateOf {
+            viewModel.directory.filter { it.parent == appState.workspace || viewModel.openFolders.contains(it.parent) }
+        }
+    }
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
