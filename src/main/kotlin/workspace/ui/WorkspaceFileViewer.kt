@@ -1,8 +1,6 @@
 package workspace.ui
 
-import androidx.compose.foundation.ContextMenuArea
-import androidx.compose.foundation.ContextMenuItem
-import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,13 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import application.model.Action
 import application.model.ApplicationState
@@ -27,6 +22,7 @@ import workspace.model.WorkspaceViewModel
 @Composable
 fun WorkspaceFileViewer(appState: ApplicationState)  {
     val viewModel = remember(appState.workspace) { WorkspaceViewModel(appState) }
+    val filteredDirectory = remember { derivedStateOf { viewModel.directory.filter { it.parent == appState.workspace || viewModel.openFolders.contains(it.parent) } } }
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
@@ -60,11 +56,10 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     if (appState.workspace != null) {
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(modifier = Modifier.fillMaxSize().padding(end = 8.dp), state = lazyListState) {
-                items(items = viewModel.directory, key = { it }) { path ->
+                items(items = filteredDirectory.value, key = { it }) { path ->
                     WorkspaceFile(
                         path = path,
                         depth = (path.parent.toString().toCharArray().count { it == '\\' || it == '/' } - appState.workspace.toString().toCharArray().count { it == '\\' || it == '/' }),
-                        visible = path.parent.toString() == appState.workspace.toString() || viewModel.openFolders.contains(path.parent),
                         unsavedChanges = appState.file == path && appState.unsavedChanges,
                         isOpenFile = appState.file == path,
                         isOpenFolder = viewModel.openFolders.contains(path),
@@ -194,7 +189,13 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     )
                 }
             }
-            VerticalScrollbar(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(), adapter = rememberScrollbarAdapter(lazyListState))
+            VerticalScrollbar(
+                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                adapter = rememberScrollbarAdapter(lazyListState),
+                style = LocalScrollbarStyle.current.copy(
+                    shape = RectangleShape
+                )
+            )
         }
     }
 }

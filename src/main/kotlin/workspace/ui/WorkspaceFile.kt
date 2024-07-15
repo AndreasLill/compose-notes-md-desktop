@@ -34,7 +34,6 @@ import kotlin.io.path.isDirectory
 fun WorkspaceFile(
     path: Path,
     depth: Int,
-    visible: Boolean,
     unsavedChanges: Boolean,
     isOpenFile: Boolean,
     isOpenFolder: Boolean,
@@ -51,101 +50,99 @@ fun WorkspaceFile(
     val focusRequester = remember { FocusRequester() }
     val contextMenuState = remember { ContextMenuState() }
 
-    if (visible) {
-        ContextMenuArea(
-            state = contextMenuState,
-            items = {
-                listOf(
-                    ContextMenuItem(
-                        label = "New File",
-                        onClick = onNewFile,
-                    ),
-                    ContextMenuItem(
-                        label = "New Folder",
-                        onClick = onNewFolder,
-                    ),
-                    ContextMenuItem(
-                        label = "Open In Explorer",
-                        onClick = onOpenInExplorer,
-                    ),
-                    ContextMenuItem(
-                        label = "Rename",
-                        onClick = {
-                            onBeginRename()
-                            isRenaming.value = true
-                            textField.value = TextFieldValue(textField.value.text, TextRange(0, textField.value.text.length))
-                            focusRequester.requestFocus()
-                        },
-                    ),
-                    ContextMenuItem(
-                        label = "Delete",
-                        onClick = onDelete,
-                    ),
-                )
-            },
-            content = {
-                Card(
-                    modifier = Modifier.fillMaxWidth().height(36.dp).clickable(onClick = onClick),
-                    border = BorderStroke(1.dp, if (contextMenuState.status != ContextMenuState.Status.Closed) MaterialTheme.colors.primary.copy(0.5f) else Color.Transparent),
-                    backgroundColor = if (isOpenFile) MaterialTheme.colors.primary.copy(0.1f) else Color.Transparent,
-                    shape = RoundedCornerShape(2.dp),
-                    elevation = 0.dp,
-                    content = {
-                        Row(
-                            modifier = Modifier.padding(4.dp).padding(start = (20 * depth).dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(16.dp),
-                                painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.folder_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.folder_open_24dp) else painterResource(Res.drawable.description_24dp),
-                                contentDescription = null,
-                                tint = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+    ContextMenuArea(
+        state = contextMenuState,
+        items = {
+            listOf(
+                ContextMenuItem(
+                    label = "New File",
+                    onClick = onNewFile,
+                ),
+                ContextMenuItem(
+                    label = "New Folder",
+                    onClick = onNewFolder,
+                ),
+                ContextMenuItem(
+                    label = "Open In Explorer",
+                    onClick = onOpenInExplorer,
+                ),
+                ContextMenuItem(
+                    label = "Rename",
+                    onClick = {
+                        onBeginRename()
+                        isRenaming.value = true
+                        textField.value = TextFieldValue(textField.value.text, TextRange(0, textField.value.text.length))
+                        focusRequester.requestFocus()
+                    },
+                ),
+                ContextMenuItem(
+                    label = "Delete",
+                    onClick = onDelete,
+                ),
+            )
+        },
+        content = {
+            Card(
+                modifier = Modifier.fillMaxWidth().height(36.dp).clickable(onClick = onClick),
+                border = BorderStroke(1.dp, if (contextMenuState.status != ContextMenuState.Status.Closed) MaterialTheme.colors.primary.copy(0.5f) else Color.Transparent),
+                backgroundColor = if (isOpenFile) MaterialTheme.colors.primary.copy(0.1f) else Color.Transparent,
+                shape = RoundedCornerShape(2.dp),
+                elevation = 0.dp,
+                content = {
+                    Row(
+                        modifier = Modifier.padding(4.dp).padding(start = (20 * depth).dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(16.dp),
+                            painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.folder_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.folder_open_24dp) else painterResource(Res.drawable.description_24dp),
+                            contentDescription = null,
+                            tint = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+                        )
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+                            BasicTextField(
+                                modifier = Modifier.focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
+                                    if (!it.isFocused) {
+                                        textField.value = TextFieldValue(path.fileName.toString())
+                                        isRenaming.value = false
+                                    }
+                                }.onPreviewKeyEvent {
+                                    if (it.key == Key.Enter && it.type == KeyEventType.KeyUp && isRenaming.value) {
+                                        onRename(textField.value.text)
+                                        textField.value = TextFieldValue(textField.value.text)
+                                        isRenaming.value = false
+                                    }
+                                    false
+                                }.then(
+                                    // Hide text field when not actively renaming.
+                                    if (isRenaming.value) {
+                                        Modifier.fillMaxWidth()
+                                    } else {
+                                        Modifier.width(0.dp)
+                                    }
+                                ),
+                                readOnly = !isRenaming.value,
+                                value = textField.value,
+                                onValueChange = { textField.value = it },
+                                singleLine = true,
+                                cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                                textStyle = LocalTextStyle.current.copy(
+                                    color = if (isOpenFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                    fontSize = 13.sp,
+                                ),
                             )
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
-                                BasicTextField(
-                                    modifier = Modifier.focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
-                                        if (!it.isFocused) {
-                                            textField.value = TextFieldValue(path.fileName.toString())
-                                            isRenaming.value = false
-                                        }
-                                    }.onPreviewKeyEvent {
-                                        if (it.key == Key.Enter && it.type == KeyEventType.KeyUp && isRenaming.value) {
-                                            onRename(textField.value.text)
-                                            textField.value = TextFieldValue(textField.value.text)
-                                            isRenaming.value = false
-                                        }
-                                        false
-                                    }.then(
-                                        // Hide text field when not actively renaming.
-                                        if (isRenaming.value) {
-                                            Modifier.fillMaxWidth()
-                                        } else {
-                                            Modifier.width(0.dp)
-                                        }
-                                    ),
-                                    readOnly = !isRenaming.value,
-                                    value = textField.value,
-                                    onValueChange = { textField.value = it },
-                                    singleLine = true,
-                                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
-                                    textStyle = LocalTextStyle.current.copy(
-                                        color = if (isOpenFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
-                                        fontSize = 13.sp,
-                                    ),
+                            if (!isRenaming.value) {
+                                Text(
+                                    text = if (unsavedChanges) "${textField.value.text}*" else textField.value.text,
+                                    color = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                    fontSize = 13.sp
                                 )
-                                if (!isRenaming.value) {
-                                    Text(
-                                        text = if (unsavedChanges) "${textField.value.text}*" else textField.value.text,
-                                        color = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
-                                        fontSize = 13.sp
-                                    )
-                                }
                             }
                         }
                     }
-                )
-            }
-        )
-    }
+                }
+            )
+        }
+    )
 }
