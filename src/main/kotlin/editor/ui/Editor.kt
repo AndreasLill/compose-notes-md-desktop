@@ -1,15 +1,18 @@
 package editor.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.*
+import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.text.TextLayoutResult
@@ -32,6 +35,7 @@ fun Editor(appState: ApplicationState) {
     val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
     val annotatedString = remember { derivedStateOf { viewModel.getMarkdownAnnotatedString(appState.fileText.text) } }
     val pointerIcon = remember { mutableStateOf(PointerIcon.Default) }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(appState.file) {
         if (appState.file == null)
@@ -60,64 +64,8 @@ fun Editor(appState: ApplicationState) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (viewModel.showTextField) {
-            BasicTextField(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                value = appState.fileText,
-                onValueChange = { appState.fileText = it },
-                textStyle = LocalTextStyle.current.copy(
-                    color = MaterialTheme.colors.primary,
-                    fontSize = appState.editorFontSize.sp,
-                    lineHeight = (appState.editorFontSize * 1.75f).sp,
-                    fontFamily = FontFamily.Monospace,
-                ),
-                cursorBrush = SolidColor(MaterialTheme.colors.primary),
-                visualTransformation = {
-                    TransformedText(
-                        text = annotatedString.value,
-                        offsetMapping = OffsetMapping.Identity
-                    )
-                },
-                onTextLayout = {
-                    layoutResult.value = it
-                },
-                decorationBox = { innerTextField ->
-                    /**
-                     * Pointer input capture box for catching annotated urls.
-                     * Only active when CTRL is pressed in application.
-                     */
-                    if (appState.isCtrlPressed) {
-                        Box(modifier = Modifier.pointerHoverIcon(pointerIcon.value).onPointerEvent(PointerEventType.Move) { event ->
-                            layoutResult.value?.let { layout ->
-                                val position = layout.getOffsetForPosition(event.changes.first().position)
-                                val annotation = annotatedString.value.getStringAnnotations(position, position).firstOrNull()
-                                if (annotation?.tag == "URL") {
-                                    pointerIcon.value = PointerIcon.Hand
-                                } else {
-                                    pointerIcon.value = PointerIcon.Default
-                                }
-                            }
-                        }.pointerInput(Unit) {
-                            detectTapGestures { offset ->
-                                layoutResult.value?.let { layout ->
-                                    val position = layout.getOffsetForPosition(offset)
-                                    annotatedString.value.getStringAnnotations(position, position).firstOrNull()?.let { annotation ->
-                                        if (annotation.tag == "URL") {
-                                            viewModel.openInBrowser(annotation.item)
-                                            appState.isCtrlPressed = false
-                                        }
-                                    }
-                                }
-                            }
-                        })
-                    }
-                    innerTextField()
-                }
-
-            )
-        }
-        if (appState.workspace != null && appState.file == null) {
+    if (appState.workspace != null && appState.file == null) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "No file is open",
@@ -135,22 +83,81 @@ fun Editor(appState: ApplicationState) {
                 )
             }
         }
-        if (appState.file != null) {
-            Column(modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).background(MaterialTheme.colors.background)) {
-                Divider(
-                    modifier = Modifier.fillMaxWidth(),
-                    thickness = 1.dp
-                )
-                Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp)) {
-                    Column(modifier = Modifier.align(Alignment.CenterEnd)) {
-                        SelectionContainer {
-                            Text(
-                                text = if (appState.fileText.selection.length > 0) "${appState.fileText.text.length} characters (${appState.fileText.selection.length} selected)" else "${appState.fileText.text.length} characters",
-                                fontSize = 12.sp,
-                                maxLines = 1,
+    }
+
+    if (appState.workspace != null && appState.file != null) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (viewModel.showTextField) {
+                Box(modifier = Modifier.fillMaxSize().padding(bottom = 30.dp)) {
+                    BasicTextField(
+                        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState),
+                        value = appState.fileText,
+                        onValueChange = { appState.fileText = it },
+                        textStyle = LocalTextStyle.current.copy(
+                            color = MaterialTheme.colors.primary,
+                            fontSize = appState.editorFontSize.sp,
+                            lineHeight = (appState.editorFontSize * 1.75f).sp,
+                            fontFamily = FontFamily.Monospace,
+                        ),
+                        cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                        visualTransformation = {
+                            TransformedText(
+                                text = annotatedString.value,
+                                offsetMapping = OffsetMapping.Identity
                             )
+                        },
+                        onTextLayout = {
+                            layoutResult.value = it
+                        },
+                        decorationBox = { innerTextField ->
+                            /**
+                             * Pointer input capture box for catching annotated urls.
+                             * Only active when CTRL is pressed in application.
+                             */
+                            if (appState.isCtrlPressed) {
+                                Box(modifier = Modifier.pointerHoverIcon(pointerIcon.value).onPointerEvent(PointerEventType.Move) { event ->
+                                    layoutResult.value?.let { layout ->
+                                        val position = layout.getOffsetForPosition(event.changes.first().position)
+                                        val annotation = annotatedString.value.getStringAnnotations(position, position).firstOrNull()
+                                        if (annotation?.tag == "URL") {
+                                            pointerIcon.value = PointerIcon.Hand
+                                        } else {
+                                            pointerIcon.value = PointerIcon.Default
+                                        }
+                                    }
+                                }.pointerInput(Unit) {
+                                    detectTapGestures { offset ->
+                                        layoutResult.value?.let { layout ->
+                                            val position = layout.getOffsetForPosition(offset)
+                                            annotatedString.value.getStringAnnotations(position, position).firstOrNull()?.let { annotation ->
+                                                if (annotation.tag == "URL") {
+                                                    viewModel.openInBrowser(annotation.item)
+                                                    appState.isCtrlPressed = false
+                                                }
+                                            }
+                                        }
+                                    }
+                                })
+                            }
+                            innerTextField()
                         }
-                    }
+                    )
+                    VerticalScrollbar(
+                        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                        adapter = rememberScrollbarAdapter(scrollState),
+                        style = LocalScrollbarStyle.current.copy(
+                            shape = RectangleShape
+                        )
+                    )
+                }
+            }
+            Box(modifier = Modifier.fillMaxWidth().height(30.dp).align(Alignment.BottomCenter).background(MaterialTheme.colors.background).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                Row(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd)) {
+                    Text(
+                        text = if (appState.fileText.selection.length > 0) "${appState.fileText.text.length} characters (${appState.fileText.selection.length} selected)" else "${appState.fileText.text.length} characters",
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                    )
                 }
             }
         }
