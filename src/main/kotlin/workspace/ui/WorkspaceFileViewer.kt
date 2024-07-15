@@ -33,11 +33,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
         }
     }
 
-    LaunchedEffect(appState.workspace) {
-        if (appState.workspace == null) {
-            return@LaunchedEffect
-        }
-
+    LaunchedEffect(Unit) {
         appState.event.collect { event ->
             if (event == Action.NewFile) {
                 appState.workspace?.let { path ->

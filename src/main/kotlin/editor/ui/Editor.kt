@@ -52,7 +52,7 @@ fun Editor(appState: ApplicationState) {
         viewModel.updateUnsavedChanges()
     }
 
-    LaunchedEffect(appState.file) {
+    LaunchedEffect(Unit) {
         appState.event.collect { event ->
             if (event == Action.SaveFile) {
                 appState.saveChanges()
