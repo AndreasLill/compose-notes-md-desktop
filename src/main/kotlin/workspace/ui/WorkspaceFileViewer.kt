@@ -1,14 +1,14 @@
 package workspace.ui
 
 import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -53,8 +53,51 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     }
 
     if (appState.workspace != null) {
+        /**
+         * Background layout for context menu.
+         */
         Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(modifier = Modifier.fillMaxSize().padding(end = 8.dp), state = lazyListState) {
+            ContextMenuArea(
+                items = {
+                    listOf(
+                        ContextMenuItem(
+                            label = "New File",
+                            onClick = {
+                                scope.launch {
+                                    appState.workspace?.let {
+                                        viewModel.createFile(it)
+                                    }
+                                }
+                            },
+                        ),
+                        ContextMenuItem(
+                            label = "New Folder",
+                            onClick = {
+                                scope.launch {
+                                    appState.workspace?.let {
+                                        viewModel.createFolder(it)
+                                    }
+                                }
+                            },
+                        ),
+                        ContextMenuItem(
+                            label = "Open In Explorer",
+                            onClick = {
+                                appState.workspace?.let {
+                                    viewModel.openInExplorer(it)
+                                }
+                            },
+                        ),
+                    )
+                },
+                content = {
+                    Box(modifier = Modifier.fillMaxSize())
+                }
+            )
+            /**
+             * Lazy list for directory where key is the path.
+             */
+            LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), state = lazyListState, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 items(items = viewModel.directory.filter { it.parent == appState.workspace || viewModel.openFolders.contains(it.parent) }, key = { it }) { path ->
                     WorkspaceFile(
                         path = path,
@@ -148,46 +191,10 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                         },
                     )
                 }
-                item {
-                    ContextMenuArea(
-                        items = {
-                            listOf(
-                                ContextMenuItem(
-                                    label = "New File",
-                                    onClick = {
-                                        scope.launch {
-                                            appState.workspace?.let {
-                                                viewModel.createFile(it)
-                                            }
-                                        }
-                                    },
-                                ),
-                                ContextMenuItem(
-                                    label = "New Folder",
-                                    onClick = {
-                                        scope.launch {
-                                            appState.workspace?.let {
-                                                viewModel.createFolder(it)
-                                            }
-                                        }
-                                    },
-                                ),
-                                ContextMenuItem(
-                                    label = "Open In Explorer",
-                                    onClick = {
-                                        appState.workspace?.let {
-                                            viewModel.openInExplorer(it)
-                                        }
-                                    },
-                                ),
-                            )
-                        },
-                        content = {
-                            Box(modifier = Modifier.fillMaxSize())
-                        }
-                    )
-                }
             }
+            /**
+             * Vertical scrollbar for directory lazy list.
+             */
             VerticalScrollbar(
                 modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
                 adapter = rememberScrollbarAdapter(lazyListState),

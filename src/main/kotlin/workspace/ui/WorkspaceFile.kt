@@ -30,6 +30,7 @@ import org.jetbrains.compose.resources.painterResource
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun WorkspaceFile(
     path: Path,
@@ -83,10 +84,11 @@ fun WorkspaceFile(
         },
         content = {
             Card(
-                modifier = Modifier.fillMaxWidth().height(36.dp).clickable(onClick = onClick),
+                modifier = Modifier.fillMaxWidth().height(36.dp),
                 border = BorderStroke(1.dp, if (contextMenuState.status != ContextMenuState.Status.Closed) MaterialTheme.colors.primary.copy(0.5f) else Color.Transparent),
                 backgroundColor = if (isOpenFile) MaterialTheme.colors.primary.copy(0.1f) else Color.Transparent,
-                shape = RoundedCornerShape(2.dp),
+                shape = RoundedCornerShape(4.dp),
+                onClick = onClick,
                 elevation = 0.dp,
                 content = {
                     Row(
