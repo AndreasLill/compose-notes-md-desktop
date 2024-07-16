@@ -21,6 +21,18 @@ class ApplicationState {
     val event = MutableSharedFlow<Action>()
     val confirmDialog = ConfirmDialogState()
 
+    fun getWorkspaceShortString(): String {
+        workspace?.let {
+            val parts = it.toString().split("\\")
+            if (parts.size >= 2) {
+                return "..\\${parts[parts.size-2]}\\${parts[parts.size-1]}"
+            } else {
+                return workspace.toString()
+            }
+        }
+        return ""
+    }
+
     fun discardChanges() {
         this.fileText = TextFieldValue(fileOriginalText)
     }

@@ -1,16 +1,14 @@
 package workspace.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import application.model.Action
 import application.model.ApplicationState
 import application.ui.Tooltip
@@ -26,7 +24,37 @@ fun WorkspacePanel(appState: ApplicationState) {
     val scope = rememberCoroutineScope()
 
     if (appState.workspace != null) {
-        Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Box(modifier = Modifier.fillMaxWidth().padding(top = 16.dp).padding(horizontal = 16.dp)) {
+            Tooltip(appState.workspace.toString()) {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        scope.launch {
+                            appState.event.emit(Action.ChangeWorkspace)
+                        }
+                    },
+                    content = {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                modifier = Modifier.align(Alignment.CenterStart).padding(end = 24.dp),
+                                text = appState.getWorkspaceShortString(),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colors.onSurface
+                            )
+                            Icon(
+                                modifier = Modifier.size(20.dp).align(Alignment.CenterEnd),
+                                painter = painterResource(Res.drawable.sync_24dp),
+                                tint = MaterialTheme.colors.onSurface,
+                                contentDescription = "Change Workspace"
+                            )
+                        }
+                    }
+                )
+            }
+        }
+        Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp)) {
             Row(modifier = Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
                 Tooltip("New File") {
                     IconButton(
@@ -37,8 +65,9 @@ fun WorkspacePanel(appState: ApplicationState) {
                         },
                         content = {
                             Icon(
+                                modifier = Modifier.size(20.dp),
                                 painter = painterResource(Res.drawable.note_add_24dp),
-                                contentDescription = null
+                                contentDescription = "New File"
                             )
                         }
                     )
@@ -52,25 +81,9 @@ fun WorkspacePanel(appState: ApplicationState) {
                         },
                         content = {
                             Icon(
+                                modifier = Modifier.size(20.dp),
                                 painter = painterResource(Res.drawable.create_new_folder_24dp),
-                                contentDescription = null
-                            )
-                        }
-                    )
-                }
-            }
-            Row(modifier = Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
-                Tooltip("Change Workspace") {
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                appState.event.emit(Action.ChangeWorkspace)
-                            }
-                        },
-                        content = {
-                            Icon(
-                                painter = painterResource(Res.drawable.sync_24dp),
-                                contentDescription = null
+                                contentDescription = "New Folder"
                             )
                         }
                     )
