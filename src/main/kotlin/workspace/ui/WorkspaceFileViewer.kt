@@ -22,11 +22,6 @@ import workspace.model.WorkspaceViewModel
 @Composable
 fun WorkspaceFileViewer(appState: ApplicationState)  {
     val viewModel = remember(appState.workspace) { WorkspaceViewModel(appState) }
-    val filteredDirectory = remember(appState.workspace) {
-        derivedStateOf {
-            viewModel.directory.filter { it.parent == appState.workspace || viewModel.openFolders.contains(it.parent) }
-        }
-    }
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
@@ -60,7 +55,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
     if (appState.workspace != null) {
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(modifier = Modifier.fillMaxSize().padding(end = 8.dp), state = lazyListState) {
-                items(items = filteredDirectory.value, key = { it }) { path ->
+                items(items = viewModel.directory.filter { it.parent == appState.workspace || viewModel.openFolders.contains(it.parent) }, key = { it }) { path ->
                     WorkspaceFile(
                         path = path,
                         depth = (path.parent.toString().toCharArray().count { it == '\\' || it == '/' } - appState.workspace.toString().toCharArray().count { it == '\\' || it == '/' }),

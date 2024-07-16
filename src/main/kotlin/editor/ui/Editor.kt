@@ -33,7 +33,7 @@ fun Editor(appState: ApplicationState) {
     val viewModel = remember { EditorViewModel(appState) }
     val scope = rememberCoroutineScope()
     val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
-    val annotatedString = remember { derivedStateOf { viewModel.getMarkdownAnnotatedString(appState.fileText.text) } }
+    val annotatedString = remember(appState.fileText.text) { viewModel.getMarkdownAnnotatedString(appState.fileText.text) }
     val pointerIcon = remember { mutableStateOf(PointerIcon.Default) }
     val scrollState = rememberScrollState()
 
@@ -102,7 +102,7 @@ fun Editor(appState: ApplicationState) {
                         cursorBrush = SolidColor(MaterialTheme.colors.primary),
                         visualTransformation = {
                             TransformedText(
-                                text = annotatedString.value,
+                                text = annotatedString,
                                 offsetMapping = OffsetMapping.Identity
                             )
                         },
@@ -118,7 +118,7 @@ fun Editor(appState: ApplicationState) {
                                 Box(modifier = Modifier.pointerHoverIcon(pointerIcon.value).onPointerEvent(PointerEventType.Move) { event ->
                                     layoutResult.value?.let { layout ->
                                         val position = layout.getOffsetForPosition(event.changes.first().position)
-                                        val annotation = annotatedString.value.getStringAnnotations(position, position).firstOrNull()
+                                        val annotation = annotatedString.getStringAnnotations(position, position).firstOrNull()
                                         if (annotation?.tag == "URL") {
                                             pointerIcon.value = PointerIcon.Hand
                                         } else {
@@ -129,7 +129,7 @@ fun Editor(appState: ApplicationState) {
                                     detectTapGestures { offset ->
                                         layoutResult.value?.let { layout ->
                                             val position = layout.getOffsetForPosition(offset)
-                                            annotatedString.value.getStringAnnotations(position, position).firstOrNull()?.let { annotation ->
+                                            annotatedString.getStringAnnotations(position, position).firstOrNull()?.let { annotation ->
                                                 if (annotation.tag == "URL") {
                                                     viewModel.openInBrowser(annotation.item)
                                                     appState.isCtrlPressed = false
