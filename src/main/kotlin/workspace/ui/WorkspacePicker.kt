@@ -7,23 +7,32 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import application.model.ApplicationState
 import application.model.Action
+import io.FileHandler
+import kotlinx.coroutines.launch
 import java.nio.file.Paths
 
 @Composable
 fun WorkspacePicker(appState: ApplicationState) {
+    val scope = rememberCoroutineScope()
     val folderPicker = rememberDirectoryPickerLauncher(
-        title = "Select a workspace",
-        initialDirectory = "",
+        title = "Select a workspace folder.",
         onResult = {
             it?.path?.let { path ->
-                appState.workspace = Paths.get(path)
-                appState.file = null
+                scope.launch {
+                    if (FileHandler.isValidWorkspace(Paths.get(path))) {
+                        appState.workspace = Paths.get(path)
+                        appState.file = null
+                    } else {
+                        // TODO: Add notification with invalid workspace error.
+                    }
+                }
             }
         }
     )
