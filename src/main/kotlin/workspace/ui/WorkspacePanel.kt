@@ -13,9 +13,9 @@ import application.model.Action
 import application.model.ApplicationState
 import application.ui.Tooltip
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
+import com.example.composenotesmd.desktop.composenotesmd.generated.resources.change_workspace_24dp
+import com.example.composenotesmd.desktop.composenotesmd.generated.resources.create_new_file_24dp
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.create_new_folder_24dp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.note_add_24dp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.sync_24dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -45,7 +45,7 @@ fun WorkspacePanel(appState: ApplicationState) {
                             )
                             Icon(
                                 modifier = Modifier.size(20.dp).align(Alignment.CenterEnd),
-                                painter = painterResource(Res.drawable.sync_24dp),
+                                painter = painterResource(Res.drawable.change_workspace_24dp),
                                 tint = MaterialTheme.colors.onSurface,
                                 contentDescription = "Change Workspace"
                             )
@@ -66,7 +66,7 @@ fun WorkspacePanel(appState: ApplicationState) {
                         content = {
                             Icon(
                                 modifier = Modifier.size(20.dp),
-                                painter = painterResource(Res.drawable.note_add_24dp),
+                                painter = painterResource(Res.drawable.create_new_file_24dp),
                                 contentDescription = "New File"
                             )
                         }

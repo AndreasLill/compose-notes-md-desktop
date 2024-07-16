@@ -22,10 +22,10 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.composenotesmd.desktop.composenotesmd.generated.resources.*
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.description_24dp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.folder_24dp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.folder_open_24dp
+import com.example.composenotesmd.desktop.composenotesmd.generated.resources.arrow_down_24dp
+import com.example.composenotesmd.desktop.composenotesmd.generated.resources.arrow_right_24dp
 import org.jetbrains.compose.resources.painterResource
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
@@ -96,7 +96,7 @@ fun WorkspaceFile(
                     ) {
                         Icon(
                             modifier = Modifier.size(16.dp),
-                            painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.folder_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.folder_open_24dp) else painterResource(Res.drawable.description_24dp),
+                            painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.arrow_right_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.arrow_down_24dp) else painterResource(Res.drawable.text_file_24dp),
                             contentDescription = null,
                             tint = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                         )
