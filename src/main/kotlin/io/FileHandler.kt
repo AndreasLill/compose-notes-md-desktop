@@ -11,6 +11,9 @@ import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
 object FileHandler {
+    private const val DEFAULT_FILE_NAME = "Untitled"
+    private const val DEFAULT_FOLDER_NAME = "Untitled"
+
     enum class WalkBehavior {
         FoldersFirst,
         FilesFirst,
@@ -42,41 +45,23 @@ object FileHandler {
     }
 
     /**
-     * Create a file from path and increment retry with number if already exists.
+     * Create a file or folder from path and increment retry with number if already exists.
      */
-    suspend fun createFile(path: Path): Path? = withContext(Dispatchers.IO) {
-        val defaultName = "Untitled"
+    suspend fun create(path: Path, folder: Boolean): Path? = withContext(Dispatchers.IO) {
         var count = 0
         while (true) {
             try {
-                val fileName = if (count > 0) "$defaultName ($count).md" else "$defaultName.md"
-                val file = Files.createFile(Paths.get(path.toString(), "/", fileName))
-                return@withContext file
+                if (folder) {
+                    val name = if (count > 0) "$DEFAULT_FOLDER_NAME ($count)" else DEFAULT_FOLDER_NAME
+                    return@withContext Files.createDirectory(Paths.get(path.toString(), "/", name))
+                } else {
+                    val name = if (count > 0) "$DEFAULT_FILE_NAME ($count).md" else "$DEFAULT_FILE_NAME.md"
+                    return@withContext Files.createFile(Paths.get(path.toString(), "/", name))
+                }
             } catch (ex: FileAlreadyExistsException) {
                 count++
             } catch (ex: IOException) {
                 println("Error creating file: $ex")
-                break
-            }
-        }
-        return@withContext null
-    }
-
-    /**
-     * Create a folder from path and increment retry with number if already exists.
-     */
-    suspend fun createFolder(path: Path): Path? = withContext(Dispatchers.IO) {
-        val defaultName = "Folder"
-        var count = 0
-        while (true) {
-            try {
-                val fileName = if (count > 0) "$defaultName ($count)" else defaultName
-                val folder = Files.createDirectory(Paths.get(path.toString(), "/", fileName))
-                return@withContext folder
-            } catch (ex: FileAlreadyExistsException) {
-                count++
-            } catch (ex: IOException) {
-                println("Error creating folder: $ex")
                 break
             }
         }

@@ -30,15 +30,18 @@ class WorkspaceViewModel(private val appState: ApplicationState) {
 
     suspend fun createFile(path: Path) {
         val dirPath = if (path.isDirectory()) path else path.parent
-        FileHandler.createFile(dirPath)?.let {
+        FileHandler.create(dirPath, false)?.let {
             updateDirectory()
             appState.file = it
+            if (path.isDirectory()) {
+                openFolders.add(path)
+            }
         }
     }
 
     suspend fun createFolder(path: Path) {
         val dirPath = if (path.isDirectory()) path else path.parent
-        FileHandler.createFolder(dirPath)?.let {
+        FileHandler.create(dirPath, true)?.let {
             updateDirectory()
             openFolders.add(it)
         }
