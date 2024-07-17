@@ -96,7 +96,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
             /**
              * Lazy list for directory where key is the path.
              */
-            LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), state = lazyListState, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), state = lazyListState) {
                 items(items = viewModel.directory.filter { it.parent == appState.workspace || viewModel.openFolders.contains(it.parent) }, key = { it }) { path ->
                     WorkspaceFile(
                         path = path,

@@ -20,6 +20,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.*
@@ -91,55 +92,62 @@ fun WorkspaceFile(
                 onClick = onClick,
                 elevation = 0.dp,
                 content = {
-                    Row(
-                        modifier = Modifier.padding(4.dp).padding(start = (20 * depth).dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(16.dp),
-                            painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.arrow_right_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.arrow_down_24dp) else painterResource(Res.drawable.text_file_24dp),
-                            contentDescription = null,
-                            tint = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
-                        )
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
-                            BasicTextField(
-                                modifier = Modifier.focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
-                                    if (!it.isFocused) {
-                                        textField.value = TextFieldValue(path.fileName.toString())
-                                        isRenaming.value = false
-                                    }
-                                }.onPreviewKeyEvent {
-                                    if (it.key == Key.Enter && it.type == KeyEventType.KeyUp && isRenaming.value) {
-                                        onRename(textField.value.text)
-                                        textField.value = TextFieldValue(textField.value.text)
-                                        isRenaming.value = false
-                                    }
-                                    false
-                                }.then(
-                                    // Hide text field when not actively renaming.
-                                    if (isRenaming.value) {
-                                        Modifier.fillMaxWidth()
-                                    } else {
-                                        Modifier.width(0.dp)
-                                    }
-                                ),
-                                readOnly = !isRenaming.value,
-                                value = textField.value,
-                                onValueChange = { textField.value = it },
-                                singleLine = true,
-                                cursorBrush = SolidColor(MaterialTheme.colors.primary),
-                                textStyle = LocalTextStyle.current.copy(
-                                    color = if (isOpenFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
-                                    fontSize = 13.sp,
-                                ),
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (depth > 0) {
+                            for (index in 1..depth) {
+                                Spacer(modifier = Modifier.width(11.dp))
+                                Box(modifier = Modifier.width(1.dp).fillMaxHeight().background(MaterialTheme.colors.onSurface.copy(0.2f)))
+                                Spacer(modifier = Modifier.width(11.dp))
+                            }
+                        }
+                        Row(modifier = Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(
+                                modifier = Modifier.size(16.dp),
+                                painter = if (path.isDirectory() && !isOpenFolder) painterResource(Res.drawable.arrow_right_24dp) else if (path.isDirectory() && isOpenFolder) painterResource(Res.drawable.arrow_down_24dp) else painterResource(Res.drawable.text_file_24dp),
+                                contentDescription = null,
+                                tint = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                             )
-                            if (!isRenaming.value) {
-                                Text(
-                                    text = if (unsavedChanges) "${textField.value.text}*" else textField.value.text,
-                                    color = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
-                                    fontSize = 13.sp
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+                                BasicTextField(
+                                    modifier = Modifier.focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
+                                        if (!it.isFocused) {
+                                            textField.value = TextFieldValue(path.fileName.toString())
+                                            isRenaming.value = false
+                                        }
+                                    }.onPreviewKeyEvent {
+                                        if (it.key == Key.Enter && it.type == KeyEventType.KeyUp && isRenaming.value) {
+                                            onRename(textField.value.text)
+                                            textField.value = TextFieldValue(textField.value.text)
+                                            isRenaming.value = false
+                                        }
+                                        false
+                                    }.then(
+                                        // Hide text field when not actively renaming.
+                                        if (isRenaming.value) {
+                                            Modifier.fillMaxWidth()
+                                        } else {
+                                            Modifier.width(0.dp)
+                                        }
+                                    ),
+                                    readOnly = !isRenaming.value,
+                                    value = textField.value,
+                                    onValueChange = { textField.value = it },
+                                    singleLine = true,
+                                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                                    textStyle = LocalTextStyle.current.copy(
+                                        color = if (isOpenFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                        fontSize = 13.sp,
+                                    ),
                                 )
+                                if (!isRenaming.value) {
+                                    Text(
+                                        text = if (unsavedChanges) "${textField.value.text}*" else textField.value.text,
+                                        color = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         }
                     }
