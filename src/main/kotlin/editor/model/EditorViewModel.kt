@@ -26,6 +26,7 @@ class EditorViewModel(private val appState: ApplicationState) {
     private val colorItalic by mutableStateOf(Color(0xFF18FFFF))
     private val colorBold by mutableStateOf(Color(0xFF00B8D4))
     private val colorCode by mutableStateOf(Color(0xFFFFAB40))
+    private val colorDivider by mutableStateOf(Color(0xFFFAFAFA))
     var showTextField by mutableStateOf(false)
 
     companion object {
@@ -65,6 +66,14 @@ class EditorViewModel(private val appState: ApplicationState) {
                  */
                 line.startsWith("#") || line.startsWith("##") || line.startsWith("###") || line.startsWith("####") || line.startsWith("#####") || line.startsWith("######") -> {
                     buildLineAnnotations(builder, SpanStyle(colorHeader), line)
+                }
+                /**
+                 * Divider
+                 */
+                line.startsWith("***") || line.startsWith("---") || line.startsWith("___") -> {
+                    builder.withStyle(SpanStyle(colorDivider)) {
+                        builder.append(line)
+                    }
                 }
                 /**
                  * Unordered List
