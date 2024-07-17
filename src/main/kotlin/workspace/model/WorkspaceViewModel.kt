@@ -62,7 +62,6 @@ class WorkspaceViewModel(private val appState: ApplicationState) {
         appState.workspace?.let {
             val list = FileHandler.walkPathDepthFirst(it, FileHandler.WalkBehavior.FoldersFirst)
             if (list != directory) {
-                println("Workspace directory updated.")
                 directory.clear()
                 directory.addAll(list)
             }

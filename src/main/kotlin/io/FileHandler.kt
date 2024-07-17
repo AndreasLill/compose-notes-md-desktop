@@ -21,7 +21,6 @@ object FileHandler {
      */
     suspend fun readFile(path: Path): String? = withContext(Dispatchers.IO) {
         try {
-            println("Read file: ${path.fileName}")
             return@withContext Files.readString(path)
         } catch (ex: IOException) {
             println("Error reading file: $ex")
@@ -35,7 +34,6 @@ object FileHandler {
     suspend fun saveFile(path: Path, data: String): Boolean = withContext(Dispatchers.IO) {
         try {
             Files.writeString(path, data)
-            println("Saved file: ${path.fileName}")
             return@withContext true
         } catch (ex: IOException) {
             println("Error saving file: $ex")
@@ -53,11 +51,9 @@ object FileHandler {
             try {
                 val fileName = if (count > 0) "$defaultName ($count).md" else "$defaultName.md"
                 val file = Files.createFile(Paths.get(path.toString(), "/", fileName))
-                println("Created file: ${file.fileName}")
                 return@withContext file
             } catch (ex: FileAlreadyExistsException) {
                 count++
-                println("Create file already exists: $ex")
             } catch (ex: IOException) {
                 println("Error creating file: $ex")
                 break
@@ -76,11 +72,9 @@ object FileHandler {
             try {
                 val fileName = if (count > 0) "$defaultName ($count)" else defaultName
                 val folder = Files.createDirectory(Paths.get(path.toString(), "/", fileName))
-                println("Created folder: ${folder.fileName}")
                 return@withContext folder
             } catch (ex: FileAlreadyExistsException) {
                 count++
-                println("Create folder already exists: $ex")
             } catch (ex: IOException) {
                 println("Error creating folder: $ex")
                 break
@@ -100,10 +94,8 @@ object FileHandler {
                 paths.forEach {
                     desktop.moveToTrash(it.toFile())
                 }
-                println("Deleted folder: $path")
             } else {
                 desktop.moveToTrash(path.toFile())
-                println("Deleted file: $path")
             }
             return@withContext true
         } catch (ex: IOException) {

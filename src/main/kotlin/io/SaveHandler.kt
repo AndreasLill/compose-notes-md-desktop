@@ -41,7 +41,6 @@ object SaveHandler {
             }
 
             Files.writeString(path, builder.toString())
-            println("Saved state")
         }
     }
 

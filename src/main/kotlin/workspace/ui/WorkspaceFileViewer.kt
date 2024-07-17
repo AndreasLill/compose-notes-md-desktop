@@ -30,7 +30,6 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
             return@LaunchedEffect
         }
 
-        println("${appState.workspace} polling started.")
         while (true) {
             viewModel.updateDirectory()
             delay(1000)
@@ -179,9 +178,7 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                                 body = "Are you sure you want to delete '${path.fileName}'?\nIt will be moved to the recycle bin.",
                                 buttonCancel = "Cancel",
                                 buttonConfirm = "Delete",
-                                onCancel = {
-                                    println("Cancel")
-                                },
+                                onCancel = {},
                                 onConfirm = {
                                     scope.launch {
                                         viewModel.deletePath(path)
