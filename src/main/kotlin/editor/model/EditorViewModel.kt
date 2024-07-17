@@ -25,13 +25,15 @@ class EditorViewModel(private val appState: ApplicationState) {
     private val colorUrl by mutableStateOf(Color(0xFFFF80AB))
     private val colorItalic by mutableStateOf(Color(0xFF18FFFF))
     private val colorBold by mutableStateOf(Color(0xFF00B8D4))
+    private val colorCode by mutableStateOf(Color(0xFFFFAB40))
     var showTextField by mutableStateOf(false)
 
     companion object {
         private const val REGEX_URL = "https?://\\S+"
-        private const val REGEX_ITALIC = "\\*[^*]+\\*"
-        private const val REGEX_BOLD = "\\*\\*[^*]+\\*\\*"
-        private val REGEX_GROUPS = Regex("($REGEX_URL)|($REGEX_ITALIC)|($REGEX_BOLD)")
+        private const val REGEX_ITALIC = "\\*[\\S]+\\*"
+        private const val REGEX_BOLD = "\\*\\*[\\S]+\\*\\*"
+        private const val REGEX_CODE = "`[\\S]+`"
+        private val REGEX_GROUPS = Regex("($REGEX_URL)|($REGEX_ITALIC)|($REGEX_BOLD)|($REGEX_CODE)")
     }
 
     suspend fun readFile(path: Path?) {
@@ -127,6 +129,14 @@ class EditorViewModel(private val appState: ApplicationState) {
                  */
                 match.groups[3]?.let {
                     builder.withStyle(SpanStyle(color = colorBold, fontWeight = FontWeight.Bold)) {
+                        builder.append(match.value)
+                    }
+                }
+                /**
+                 * Code Group
+                 */
+                match.groups[4]?.let {
+                    builder.withStyle(SpanStyle(color = colorCode, fontWeight = FontWeight.Bold)) {
                         builder.append(match.value)
                     }
                 }
