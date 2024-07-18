@@ -17,9 +17,9 @@ object SaveHandler {
 
     fun saveState(appState: ApplicationState) = runBlocking {
         withContext(Dispatchers.IO) {
-
             val builder = StringBuilder()
             builder.appendLine("editor_font_size=${appState.editorFontSize}")
+            builder.appendLine("workspace_width=${appState.workspaceWidth.toInt()}")
             appState.workspace?.let {
                 builder.appendLine("workspace=$it")
             }
@@ -41,6 +41,7 @@ object SaveHandler {
             }
 
             Files.writeString(path, builder.toString())
+            return@withContext null
         }
     }
 
@@ -69,6 +70,9 @@ object SaveHandler {
                                 appState.workspace = path
                             }
                         }
+                    }
+                    "workspace_width" -> {
+                        appState.workspaceWidth = value.toFloat()
                     }
                     "file" -> {
                         Paths.get(value).let { path ->

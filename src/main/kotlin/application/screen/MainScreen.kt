@@ -1,6 +1,9 @@
 package application.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
@@ -9,9 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
 import application.model.ApplicationState
+import application.ui.Tooltip
 import editor.ui.Editor
 import workspace.ui.WorkspaceFileViewer
 import workspace.ui.WorkspacePanel
@@ -22,7 +28,7 @@ import workspace.ui.WorkspacePicker
 fun MainScreen(appState: ApplicationState) {
     Surface(modifier = Modifier.onPointerEvent(PointerEventType.Exit) { appState.isCtrlPressed = false }.onPointerEvent(PointerEventType.Enter) { appState.isCtrlPressed = false }) {
         Row(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.width(300.dp).fillMaxHeight().background(MaterialTheme.colors.background)) {
+            Column(modifier = Modifier.width(appState.workspaceWidth.dp).fillMaxHeight().background(MaterialTheme.colors.background)) {
                 WorkspacePanel(
                     appState = appState
                 )
@@ -33,10 +39,20 @@ fun MainScreen(appState: ApplicationState) {
                     appState = appState
                 )
             }
-            Divider(
-                modifier = Modifier.width(1.dp).fillMaxHeight(),
-                color = MaterialTheme.colors.primary
-            )
+            Tooltip("Drag To Resize") {
+                Divider(
+                    modifier = Modifier.width(2.dp).fillMaxHeight().pointerHoverIcon(PointerIcon.Hand).draggable(
+                        state = rememberDraggableState { delta ->
+                            appState.workspaceWidth += delta
+                        },
+                        startDragImmediately = true,
+                        orientation = Orientation.Horizontal,
+                        onDragStarted = { },
+                        onDragStopped = { },
+                    ),
+                    color = MaterialTheme.colors.primary
+                )
+            }
             Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.surface)) {
                 Editor(appState = appState)
             }

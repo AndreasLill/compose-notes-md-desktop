@@ -34,7 +34,7 @@ fun Tooltip(text: String, content: @Composable () -> Unit) {
                 }
             )
         },
-        delayMillis = 800,
+        delayMillis = 600,
         content = content
     )
 }
