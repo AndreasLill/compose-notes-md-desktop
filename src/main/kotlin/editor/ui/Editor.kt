@@ -8,14 +8,16 @@ import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.*
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
@@ -32,10 +34,8 @@ import kotlinx.coroutines.launch
 fun Editor(appState: ApplicationState) {
     val viewModel = remember { EditorViewModel(appState) }
     val scope = rememberCoroutineScope()
-    val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
-    val annotatedString = remember(appState.fileText.text) { viewModel.getMarkdownAnnotatedString(appState.fileText.text) }
-    val pointerIcon = remember { mutableStateOf(PointerIcon.Default) }
     val scrollState = rememberScrollState()
+    val annotatedString = remember(appState.fileText.text) { viewModel.getMarkdownAnnotatedString(appState.fileText.text) }
 
     LaunchedEffect(appState.file) {
         if (appState.file == null)
@@ -87,6 +87,9 @@ fun Editor(appState: ApplicationState) {
 
     if (appState.workspace != null && appState.file != null) {
         Box(modifier = Modifier.fillMaxSize()) {
+            /**
+             * Editor Text Field
+             */
             if (viewModel.showTextField) {
                 Box(modifier = Modifier.fillMaxSize().padding(bottom = 30.dp)) {
                     BasicTextField(
@@ -107,7 +110,7 @@ fun Editor(appState: ApplicationState) {
                             )
                         },
                         onTextLayout = {
-                            layoutResult.value = it
+                            viewModel.textLayoutResult = it
                         },
                         decorationBox = { innerTextField ->
                             /**
@@ -115,19 +118,19 @@ fun Editor(appState: ApplicationState) {
                              * Only active when CTRL is pressed in application.
                              */
                             if (appState.isCtrlPressed) {
-                                Box(modifier = Modifier.pointerHoverIcon(pointerIcon.value).onPointerEvent(PointerEventType.Move) { event ->
-                                    layoutResult.value?.let { layout ->
+                                Box(modifier = Modifier.pointerHoverIcon(viewModel.pointerIcon).onPointerEvent(PointerEventType.Move) { event ->
+                                    viewModel.textLayoutResult?.let { layout ->
                                         val position = layout.getOffsetForPosition(event.changes.first().position)
                                         val annotation = annotatedString.getStringAnnotations(position, position).firstOrNull()
                                         if (annotation?.tag == "URL") {
-                                            pointerIcon.value = PointerIcon.Hand
+                                            viewModel.pointerIcon = PointerIcon.Hand
                                         } else {
-                                            pointerIcon.value = PointerIcon.Default
+                                            viewModel.pointerIcon = PointerIcon.Default
                                         }
                                     }
                                 }.pointerInput(Unit) {
                                     detectTapGestures { offset ->
-                                        layoutResult.value?.let { layout ->
+                                        viewModel.textLayoutResult?.let { layout ->
                                             val position = layout.getOffsetForPosition(offset)
                                             annotatedString.getStringAnnotations(position, position).firstOrNull()?.let { annotation ->
                                                 if (annotation.tag == "URL") {
@@ -151,6 +154,9 @@ fun Editor(appState: ApplicationState) {
                     )
                 }
             }
+            /**
+             * Editor Status Bar
+             */
             Box(modifier = Modifier.fillMaxWidth().height(30.dp).align(Alignment.BottomCenter).background(MaterialTheme.colors.background).padding(horizontal = 8.dp, vertical = 2.dp)) {
                 Row(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd)) {
                     Text(

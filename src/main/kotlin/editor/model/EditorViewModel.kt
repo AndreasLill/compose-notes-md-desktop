@@ -4,8 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -28,13 +30,20 @@ class EditorViewModel(private val appState: ApplicationState) {
     private val colorCode by mutableStateOf(Color(0xFFFFAB40))
     private val colorDivider by mutableStateOf(Color(0xFFFAFAFA))
     var showTextField by mutableStateOf(false)
+    var textLayoutResult by mutableStateOf<TextLayoutResult?>(null)
+    var pointerIcon by mutableStateOf(PointerIcon.Default)
 
     companion object {
-        private const val REGEX_URL = "https?://\\S+"
-        private const val REGEX_ITALIC = "\\*[\\S]+\\*"
-        private const val REGEX_BOLD = "\\*\\*[\\S]+\\*\\*"
-        private const val REGEX_CODE = "`[\\S]+`"
-        private val REGEX_GROUPS = Regex("($REGEX_URL)|($REGEX_ITALIC)|($REGEX_BOLD)|($REGEX_CODE)")
+        private const val PATTERN_URL = "https?://\\S+"
+        private const val PATTERN_ITALIC = "\\*[\\S]+\\*"
+        private const val PATTERN_BOLD = "\\*\\*[\\S]+\\*\\*"
+        private const val PATTERN_CODE = "`[\\S]+`"
+        private val REGEX_GROUPS = Regex("($PATTERN_URL)|($PATTERN_ITALIC)|($PATTERN_BOLD)|($PATTERN_CODE)")
+        private val REGEX_HEADER = Regex("^#{1,6}")
+        private val REGEX_DIVIDER = Regex("^(-{3}|\\*{3}|_{3})")
+        private val REGEX_UNORDERED_LIST = Regex("^[-*+]")
+        private val REGEX_ORDERED_LIST = Regex("^\\d{1,9}\\.")
+        private val REGEX_BLOCK_QUOTE = Regex("^>")
     }
 
     suspend fun readFile(path: Path?) {
@@ -64,13 +73,13 @@ class EditorViewModel(private val appState: ApplicationState) {
                 /**
                  * Header
                  */
-                line.startsWith("#") || line.startsWith("##") || line.startsWith("###") || line.startsWith("####") || line.startsWith("#####") || line.startsWith("######") -> {
+                REGEX_HEADER.containsMatchIn(line) -> {
                     buildLineAnnotations(builder, SpanStyle(colorHeader), line)
                 }
                 /**
                  * Divider
                  */
-                line.startsWith("***") || line.startsWith("---") || line.startsWith("___") -> {
+                REGEX_DIVIDER.containsMatchIn(line) -> {
                     builder.withStyle(SpanStyle(colorDivider)) {
                         builder.append(line)
                     }
@@ -78,16 +87,25 @@ class EditorViewModel(private val appState: ApplicationState) {
                 /**
                  * Unordered List
                  */
-                line.startsWith("-") || line.startsWith("*") || line.startsWith("+") -> {
+                REGEX_UNORDERED_LIST.containsMatchIn(line) -> {
                     builder.withStyle(SpanStyle(colorList)) {
                         builder.append(line.substring(0, 1))
                     }
                     buildLineAnnotations(builder, SpanStyle(colorText), line.substring(1))
                 }
                 /**
+                 * Ordered List
+                 */
+                REGEX_ORDERED_LIST.containsMatchIn(line) -> {
+                    builder.withStyle(SpanStyle(colorList)) {
+                        builder.append(line.substring(0, 2))
+                    }
+                    buildLineAnnotations(builder, SpanStyle(colorText), line.substring(2))
+                }
+                /**
                  * Block Quote
                  */
-                line.startsWith(">") -> {
+                REGEX_BLOCK_QUOTE.containsMatchIn(line) -> {
                     builder.withStyle(SpanStyle(colorBlockQuote)) {
                         builder.append(line.substring(0, 1))
                     }
