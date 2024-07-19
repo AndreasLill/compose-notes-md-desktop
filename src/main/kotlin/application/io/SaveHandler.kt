@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 
 object SaveHandler {
@@ -17,38 +18,40 @@ object SaveHandler {
 
     fun saveState(appState: ApplicationState) = runBlocking {
         withContext(Dispatchers.IO) {
-            val builder = StringBuilder()
-            builder.appendLine("editor_font_size=${appState.editorFontSize}")
-            builder.appendLine("workspace_width=${appState.workspaceWidth.toInt()}")
-            appState.workspace?.let {
-                builder.appendLine("workspace=$it")
-            }
-            appState.file?.let {
-                builder.appendLine("file=$it")
-            }
-            appState.windowState.let {
-                builder.appendLine("window_width=${it.size.width.value.toInt()}")
-                builder.appendLine("window_height=${it.size.height.value.toInt()}")
-                builder.appendLine("window_pos_x=${it.position.x.value.toInt()}")
-                builder.appendLine("window_pos_y=${it.position.y.value.toInt()}")
-            }
-
             val path = Paths.get(PATH)
-
             if (!Files.exists(path)) {
                 Files.createDirectories(path.parent)
                 Files.createFile(path)
             }
+
+            val builder = StringBuilder()
+            builder.appendLine("editor_font_size=${appState.editorFontSize}")
+            builder.appendLine("workspace_width=${appState.workspaceWidth.toInt()}")
+            builder.appendLine("window_width=${appState.windowState.size.width.value.toInt()}")
+            builder.appendLine("window_height=${appState.windowState.size.height.value.toInt()}")
+            builder.appendLine("window_pos_x=${appState.windowState.position.x.value.toInt()}")
+            builder.appendLine("window_pos_y=${appState.windowState.position.y.value.toInt()}")
+            appState.workspace?.let { builder.appendLine("workspace=$it") }
+            appState.file?.let { builder.appendLine("file=$it") }
 
             Files.writeString(path, builder.toString())
             return@withContext null
         }
     }
 
-    fun loadState(): ApplicationState {
+    fun loadState(args: Array<String>): ApplicationState {
         try {
             val appState = ApplicationState()
             val path = Paths.get(PATH)
+
+            /**
+             * Get path if application was opened with arguments.
+             */
+            val argPath: Path? = try {
+                Paths.get(args[0])
+            } catch (ex: Exception) {
+                null
+            }
 
             var windowWidth = 1200
             var windowHeight = 900
@@ -61,9 +64,7 @@ object SaveHandler {
                 val value = pair[1]
 
                 when(key) {
-                    "editor_font_size" -> {
-                        appState.editorFontSize = value.toInt()
-                    }
+                    "editor_font_size" -> appState.editorFontSize = value.toInt()
                     "workspace" -> {
                         Paths.get(value).let { path ->
                             if (Files.exists(path)) {
@@ -71,9 +72,7 @@ object SaveHandler {
                             }
                         }
                     }
-                    "workspace_width" -> {
-                        appState.workspaceWidth = value.toFloat()
-                    }
+                    "workspace_width" -> appState.workspaceWidth = value.toFloat()
                     "file" -> {
                         Paths.get(value).let { path ->
                             if (Files.exists(path)) {
@@ -86,6 +85,14 @@ object SaveHandler {
                     "window_pos_x" -> windowPosX = value.toInt()
                     "window_pos_y" -> windowPosY = value.toInt()
                 }
+            }
+
+            /**
+             * If path arguments for a file was found, disable workspaces and use as a regular text editor.
+             */
+            if (argPath != null) {
+                appState.workspaceEnabled = false
+                appState.file = argPath
             }
 
             appState.windowState = WindowState(

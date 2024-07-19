@@ -85,7 +85,7 @@ fun Editor(appState: ApplicationState) {
         }
     }
 
-    if (appState.workspace != null && appState.file != null) {
+    if (appState.file != null) {
         Box(modifier = Modifier.fillMaxSize()) {
             /**
              * Editor Text Field

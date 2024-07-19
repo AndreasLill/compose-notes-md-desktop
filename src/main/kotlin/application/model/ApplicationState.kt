@@ -13,6 +13,7 @@ class ApplicationState {
     var isCtrlPressed by mutableStateOf(false)
     var workspace by mutableStateOf<Path?>(null)
     var workspaceWidth by mutableStateOf(300f)
+    var workspaceEnabled by mutableStateOf(true)
     var file by mutableStateOf<Path?>(null)
     var fileText by mutableStateOf(TextFieldValue(""))
     var fileOriginalText by mutableStateOf("")

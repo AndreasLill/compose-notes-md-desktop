@@ -4,14 +4,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import application.input.ShortcutHandler
+import application.io.SaveHandler
 import application.screen.MainScreen
 import application.theme.ColorScheme
 import application.ui.ConfirmDialog
-import application.io.SaveHandler
 import kotlinx.coroutines.launch
 
-fun main() = application {
-    val appState = remember { SaveHandler.loadState() }
+fun main(args: Array<String>) = application {
+    val appState = remember { SaveHandler.loadState(args) }
+    val scope = rememberCoroutineScope()
     val windowTitle = remember(appState.workspace, appState.file, appState.unsavedChanges) {
         when {
             (appState.file != null && !appState.unsavedChanges) -> "Compose Notes - ${appState.file?.fileName}"
@@ -19,7 +20,6 @@ fun main() = application {
             else -> "Compose Notes"
         }
     }
-    val scope = rememberCoroutineScope()
 
     Window(
         onCloseRequest = {
