@@ -3,7 +3,7 @@ package workspace.model
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.input.TextFieldValue
 import application.model.ApplicationState
-import io.FileHandler
+import application.io.FileHandler
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path

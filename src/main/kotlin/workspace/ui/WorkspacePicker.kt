@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.sp
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import application.model.ApplicationState
 import application.model.Action
-import io.FileHandler
+import application.io.FileHandler
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 

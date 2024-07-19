@@ -14,7 +14,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import application.model.ApplicationState
-import io.FileHandler
+import application.io.FileHandler
 import java.awt.Desktop
 import java.net.URI
 import java.nio.file.Path

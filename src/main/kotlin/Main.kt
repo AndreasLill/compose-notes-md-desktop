@@ -7,7 +7,7 @@ import application.input.ShortcutHandler
 import application.screen.MainScreen
 import application.theme.ColorScheme
 import application.ui.ConfirmDialog
-import io.SaveHandler
+import application.io.SaveHandler
 import kotlinx.coroutines.launch
 
 fun main() = application {
