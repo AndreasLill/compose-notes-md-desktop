@@ -29,6 +29,9 @@ class EditorViewModel(private val appState: ApplicationState) {
     private val colorBold by mutableStateOf(Color(0xFF00B8D4))
     private val colorCode by mutableStateOf(Color(0xFFFFAB40))
     private val colorDivider by mutableStateOf(Color(0xFFFAFAFA))
+
+    var fileText by mutableStateOf(TextFieldValue(""))
+    var fileOriginalText by mutableStateOf("")
     var showTextField by mutableStateOf(false)
     var textLayoutResult by mutableStateOf<TextLayoutResult?>(null)
     var pointerIcon by mutableStateOf(PointerIcon.Default)
@@ -48,13 +51,20 @@ class EditorViewModel(private val appState: ApplicationState) {
 
     suspend fun readFile(path: Path?) {
         path?.let {
-            appState.fileOriginalText = FileHandler.readFile(it) ?: ""
-            appState.fileText = TextFieldValue(appState.fileOriginalText)
+            fileOriginalText = FileHandler.readFile(it) ?: ""
+            fileText = TextFieldValue(fileOriginalText)
+        }
+    }
+
+    suspend fun saveChanges(path: Path?) {
+        path?.let {
+            FileHandler.saveFile(it, fileText.text)
+            fileOriginalText = fileText.text
         }
     }
 
     fun updateUnsavedChanges() {
-        appState.unsavedChanges = appState.fileOriginalText != appState.fileText.text
+        appState.unsavedChanges = fileOriginalText != fileText.text
     }
 
     fun openInBrowser(uri: String) {

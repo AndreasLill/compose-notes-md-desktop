@@ -38,9 +38,10 @@ fun WorkspacePicker(appState: ApplicationState) {
     )
 
     LaunchedEffect(Unit) {
-        appState.event.collect {
-            if (it == Action.ChangeWorkspace) {
+        appState.event.collect { event ->
+            if (event.action == Action.ChangeWorkspace) {
                 folderPicker.launch()
+                event.callback()
             }
         }
     }

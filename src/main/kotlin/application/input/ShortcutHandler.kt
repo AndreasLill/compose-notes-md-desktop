@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import application.model.ApplicationState
 import application.model.Action
+import application.model.ApplicationEvent
 
 object ShortcutHandler {
     /**
@@ -18,7 +19,7 @@ object ShortcutHandler {
              */
             keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.S) && appState.file != null -> {
                 scope.launch {
-                    appState.event.emit(Action.SaveFile)
+                    appState.event.emit(ApplicationEvent(Action.SaveFile))
                 }
                 return true
             }
@@ -27,7 +28,7 @@ object ShortcutHandler {
              */
             keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.N) && appState.workspace != null -> {
                 scope.launch {
-                    appState.event.emit(Action.NewFile)
+                    appState.event.emit(ApplicationEvent(Action.NewFile))
                 }
                 return true
             }
@@ -35,7 +36,6 @@ object ShortcutHandler {
              * Editor - Increase Font - CTRL + PageUp
              */
             keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.PageUp) && appState.file != null -> {
-
                 appState.editorFontSize = appState.editorFontSize.plus(1).coerceIn(6, 64)
                 return true
             }
@@ -43,7 +43,6 @@ object ShortcutHandler {
              * Editor - Decrease Font - CTRL + PageDown
              */
             keyEvent.isCtrlPressed && keyEvent.isKeyPressed(Key.PageDown) && appState.file != null -> {
-
                 appState.editorFontSize = appState.editorFontSize.minus(1).coerceIn(6, 64)
                 return true
             }

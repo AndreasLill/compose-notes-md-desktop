@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import application.model.Action
+import application.model.ApplicationEvent
 import application.model.ApplicationState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -38,15 +39,17 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
 
     LaunchedEffect(Unit) {
         appState.event.collect { event ->
-            if (event == Action.NewFile) {
+            if (event.action == Action.NewFile) {
                 appState.workspace?.let { path ->
                     viewModel.createFile(path)
                 }
+                event.callback()
             }
-            if (event == Action.NewFolder) {
+            if (event.action == Action.NewFolder) {
                 appState.workspace?.let { path ->
                     viewModel.createFolder(path)
                 }
+                event.callback()
             }
         }
     }
@@ -105,6 +108,9 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                         isOpenFile = appState.file == path,
                         isOpenFolder = viewModel.openFolders.contains(path),
                         onClick = {
+                            if (path == appState.file)
+                                return@WorkspaceFile
+
                             if (appState.unsavedChanges) {
                                 appState.confirmDialog.showDialog(
                                     title = "Unsaved Changes",
@@ -113,15 +119,13 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                                     buttonDiscard = "Discard",
                                     buttonConfirm = "Save Changes",
                                     onDiscard = {
-                                        scope.launch {
-                                            appState.discardChanges()
-                                            viewModel.selectItem(path)
-                                        }
+                                        viewModel.selectItem(path)
                                     },
                                     onConfirm = {
                                         scope.launch {
-                                            appState.saveChanges()
-                                            viewModel.selectItem(path)
+                                            appState.event.emit(ApplicationEvent(Action.SaveFile) {
+                                                viewModel.selectItem(path)
+                                            })
                                         }
                                     }
                                 )
@@ -151,18 +155,15 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                                     buttonDiscard = "Discard",
                                     buttonConfirm = "Save Changes",
                                     onDiscard = {
-                                        scope.launch {
-                                            appState.discardChanges()
-                                            appState.file = path
-                                        }
-                                    },
-                                    onConfirm = {
-                                        scope.launch {
-                                            appState.saveChanges()
-                                            appState.file = path
-                                        }
+                                        appState.file = path
                                     }
-                                )
+                                ) {
+                                    scope.launch {
+                                        appState.event.emit(ApplicationEvent(Action.SaveFile) {
+                                            appState.file = path
+                                        })
+                                    }
+                                }
                             } else {
                                 appState.file = path
                             }

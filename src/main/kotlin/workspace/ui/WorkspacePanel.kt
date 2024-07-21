@@ -10,6 +10,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import application.model.Action
+import application.model.ApplicationEvent
 import application.model.ApplicationState
 import application.ui.Tooltip
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
@@ -30,7 +31,7 @@ fun WorkspacePanel(appState: ApplicationState) {
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
                         scope.launch {
-                            appState.event.emit(Action.ChangeWorkspace)
+                            appState.event.emit(ApplicationEvent(Action.ChangeWorkspace))
                         }
                     },
                     content = {
@@ -60,7 +61,7 @@ fun WorkspacePanel(appState: ApplicationState) {
                     IconButton(
                         onClick = {
                             scope.launch {
-                                appState.event.emit(Action.NewFile)
+                                appState.event.emit(ApplicationEvent(Action.NewFile))
                             }
                         },
                         content = {
@@ -76,7 +77,7 @@ fun WorkspacePanel(appState: ApplicationState) {
                     IconButton(
                         onClick = {
                             scope.launch {
-                                appState.event.emit(Action.NewFolder)
+                                appState.event.emit(ApplicationEvent(Action.NewFolder))
                             }
                         },
                         content = {

@@ -20,6 +20,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import application.input.ShortcutHandler
 import application.io.SaveHandler
+import application.model.Action
+import application.model.ApplicationEvent
 import application.theme.ColorScheme
 import application.ui.ConfirmDialog
 import application.ui.Tooltip
@@ -52,15 +54,15 @@ fun main(args: Array<String>) = application {
                     buttonDiscard = "Discard",
                     buttonConfirm = "Save Changes",
                     onDiscard = {
-                        appState.discardChanges()
                         SaveHandler.saveState(appState)
                         exitApplication()
                     },
                     onConfirm = {
                         scope.launch {
-                            appState.saveChanges()
-                            SaveHandler.saveState(appState)
-                            exitApplication()
+                            appState.event.emit(ApplicationEvent(Action.SaveFile) {
+                                SaveHandler.saveState(appState)
+                                exitApplication()
+                            })
                         }
                     }
                 )

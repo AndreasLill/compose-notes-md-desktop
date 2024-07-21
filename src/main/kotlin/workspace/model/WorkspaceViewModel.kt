@@ -1,9 +1,8 @@
 package workspace.model
 
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.ui.text.input.TextFieldValue
-import application.model.ApplicationState
 import application.io.FileHandler
+import application.model.ApplicationState
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path
@@ -72,8 +71,6 @@ class WorkspaceViewModel(private val appState: ApplicationState) {
         appState.file?.let { path ->
             if (Files.notExists(path)) {
                 appState.file = null
-                appState.fileText = TextFieldValue()
-                appState.fileOriginalText = ""
             }
         }
     }

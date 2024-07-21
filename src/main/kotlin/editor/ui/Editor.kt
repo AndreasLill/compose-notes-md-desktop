@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import application.model.Action
+import application.model.ApplicationEvent
 import application.model.ApplicationState
 import editor.model.EditorViewModel
 import kotlinx.coroutines.delay
@@ -35,7 +36,7 @@ fun Editor(appState: ApplicationState) {
     val viewModel = remember { EditorViewModel(appState) }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val annotatedString = remember(appState.fileText.text) { viewModel.getMarkdownAnnotatedString(appState.fileText.text) }
+    val annotatedString = remember(viewModel.fileText.text) { viewModel.getMarkdownAnnotatedString(viewModel.fileText.text) }
 
     LaunchedEffect(appState.file) {
         if (appState.file == null)
@@ -52,14 +53,15 @@ fun Editor(appState: ApplicationState) {
         viewModel.showTextField = true
     }
 
-    LaunchedEffect(appState.fileOriginalText, appState.fileText) {
+    LaunchedEffect(viewModel.fileOriginalText, viewModel.fileText) {
         viewModel.updateUnsavedChanges()
     }
 
     LaunchedEffect(Unit) {
         appState.event.collect { event ->
-            if (event == Action.SaveFile) {
-                appState.saveChanges()
+            if (event.action == Action.SaveFile) {
+                viewModel.saveChanges(appState.file)
+                event.callback()
             }
         }
     }
@@ -74,7 +76,7 @@ fun Editor(appState: ApplicationState) {
                 TextButton(
                     onClick = {
                         scope.launch {
-                            appState.event.emit(Action.NewFile)
+                            appState.event.emit(ApplicationEvent(Action.NewFile))
                         }
                     },
                     content = {
@@ -94,8 +96,8 @@ fun Editor(appState: ApplicationState) {
                 Box(modifier = Modifier.fillMaxSize().padding(bottom = 30.dp)) {
                     BasicTextField(
                         modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState),
-                        value = appState.fileText,
-                        onValueChange = { appState.fileText = it },
+                        value = viewModel.fileText,
+                        onValueChange = { viewModel.fileText = it },
                         textStyle = LocalTextStyle.current.copy(
                             color = MaterialTheme.colors.primary,
                             fontSize = appState.editorFontSize.sp,
@@ -160,7 +162,7 @@ fun Editor(appState: ApplicationState) {
             Box(modifier = Modifier.fillMaxWidth().height(30.dp).align(Alignment.BottomCenter).background(MaterialTheme.colors.background).padding(horizontal = 8.dp, vertical = 2.dp)) {
                 Row(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd)) {
                     Text(
-                        text = if (appState.fileText.selection.length > 0) "${appState.fileText.text.length} characters (${appState.fileText.selection.length} selected)" else "${appState.fileText.text.length} characters",
+                        text = if (viewModel.fileText.selection.length > 0) "${viewModel.fileText.text.length} characters (${viewModel.fileText.selection.length} selected)" else "${viewModel.fileText.text.length} characters",
                         fontSize = 12.sp,
                         maxLines = 1,
                     )
