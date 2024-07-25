@@ -25,10 +25,10 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.arrow_down_24dp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.arrow_right_24dp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.text_file_24dp
+import com.andreaslill.composenotesmd.desktop.composenotesmd.generated.resources.Res
+import com.andreaslill.composenotesmd.desktop.composenotesmd.generated.resources.arrow_down_24dp
+import com.andreaslill.composenotesmd.desktop.composenotesmd.generated.resources.arrow_right_24dp
+import com.andreaslill.composenotesmd.desktop.composenotesmd.generated.resources.text_file_24dp
 import org.jetbrains.compose.resources.painterResource
 import java.nio.file.Path
 import kotlin.io.path.isDirectory

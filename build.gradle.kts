@@ -3,9 +3,10 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
-group = "com.example.composenotesmd.desktop"
+group = "com.andreaslill.composenotesmd.desktop"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -15,10 +16,6 @@ repositories {
 }
 
 dependencies {
-    // Note, if you develop a library, you should use compose.desktop.common.
-    // compose.desktop.currentOs should be used in launcher-sourceSet
-    // (in a separate module for demo project and in testMain).
-    // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
     implementation(compose.components.resources)
     implementation("io.github.vinceglb:filekit-compose:0.6.2")

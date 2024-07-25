@@ -13,10 +13,10 @@ import application.model.Action
 import application.model.ApplicationEvent
 import application.model.ApplicationState
 import application.ui.Tooltip
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.change_workspace_24dp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.create_new_file_24dp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.create_new_folder_24dp
+import com.andreaslill.composenotesmd.desktop.composenotesmd.generated.resources.Res
+import com.andreaslill.composenotesmd.desktop.composenotesmd.generated.resources.change_workspace_24dp
+import com.andreaslill.composenotesmd.desktop.composenotesmd.generated.resources.create_new_file_24dp
+import com.andreaslill.composenotesmd.desktop.composenotesmd.generated.resources.create_new_folder_24dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
