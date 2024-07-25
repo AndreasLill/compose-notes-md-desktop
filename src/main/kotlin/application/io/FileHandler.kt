@@ -20,14 +20,46 @@ object FileHandler {
     }
 
     /**
-     * Read all file contents.
+     * Read all file contents in chunks based on buffer size, data is streamed using callbacks.
      */
-    suspend fun readFile(path: Path): String? = withContext(Dispatchers.IO) {
+    suspend fun readFileStreamed(path: Path, bufferSize: Int, onAddText: (String) -> Unit, onDone: () -> Unit) = withContext(Dispatchers.IO) {
         try {
-            return@withContext Files.readString(path)
+            val builder = StringBuilder()
+            var hasLines = false
+            var count = 0
+            /**
+             * Read all lines and append to the string builder with the buffer size as max size, callback with "onAddText" for each buffer.
+             */
+            Files.newBufferedReader(path).useLines { lines ->
+                lines.forEach { line ->
+                    builder.appendLine(line)
+                    hasLines = true
+                    count++
+                    if (count == bufferSize) {
+                        onAddText(builder.toString())
+                        builder.clear()
+                        count = 0
+                    }
+                }
+            }
+            /**
+             * Flush the remaining text.
+             */
+            if (builder.isNotEmpty()) {
+                onAddText(builder.toString())
+            }
+            /**
+             * Callback empty text if the file has no lines.
+             */
+            if (!hasLines) {
+                onAddText("")
+            }
+            /**
+             * Callback onDone to notify that reading is completed.
+             */
+            onDone()
         } catch (ex: IOException) {
             println("Error reading file: $ex")
-            return@withContext null
         }
     }
 

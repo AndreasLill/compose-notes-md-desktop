@@ -1,25 +1,24 @@
 package editor.model
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import application.model.ApplicationState
 import application.io.FileHandler
 import java.awt.Desktop
 import java.net.URI
 import java.nio.file.Path
 
-class EditorViewModel(private val appState: ApplicationState) {
+class EditorViewModel {
     private val colorText by mutableStateOf(Color(0xFFFAFAFA))
     private val colorHeader by mutableStateOf(Color(0xFF40C4FF))
     private val colorList by mutableStateOf(Color(0xFFEA80FC))
@@ -30,11 +29,9 @@ class EditorViewModel(private val appState: ApplicationState) {
     private val colorCode by mutableStateOf(Color(0xFFFFAB40))
     private val colorDivider by mutableStateOf(Color(0xFFFAFAFA))
 
-    var fileText by mutableStateOf(TextFieldValue(""))
-    var fileOriginalText by mutableStateOf("")
-    var showTextField by mutableStateOf(false)
+    var editorState by mutableStateOf(TextFieldState("text"))
     var textLayoutResult by mutableStateOf<TextLayoutResult?>(null)
-    var pointerIcon by mutableStateOf(PointerIcon.Default)
+    var isReading by mutableStateOf(false)
 
     companion object {
         private const val PATTERN_URL = "https?://\\S+"
@@ -51,20 +48,26 @@ class EditorViewModel(private val appState: ApplicationState) {
 
     suspend fun readFile(path: Path?) {
         path?.let {
-            fileOriginalText = FileHandler.readFile(it) ?: ""
-            fileText = TextFieldValue(fileOriginalText)
+            isReading = true
+            val builder = StringBuilder()
+            FileHandler.readFileStreamed(
+                path = it,
+                bufferSize = 256,
+                onAddText = { text ->
+                    builder.append(text)
+                    editorState.setTextAndPlaceCursorAtEnd(builder.toString())
+                },
+                onDone = {
+                    isReading = false
+                }
+            )
         }
     }
 
     suspend fun saveChanges(path: Path?) {
         path?.let {
-            FileHandler.saveFile(it, fileText.text)
-            fileOriginalText = fileText.text
+            FileHandler.saveFile(it, editorState.text.toString())
         }
-    }
-
-    fun updateUnsavedChanges() {
-        appState.unsavedChanges = fileOriginalText != fileText.text
     }
 
     fun openInBrowser(uri: String) {

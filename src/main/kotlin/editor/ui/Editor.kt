@@ -1,60 +1,42 @@
 package editor.ui
 
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.LocalTextStyle
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import application.model.Action
 import application.model.ApplicationEvent
 import application.model.ApplicationState
 import editor.model.EditorViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Editor(appState: ApplicationState) {
-    val viewModel = remember { EditorViewModel(appState) }
+    val viewModel = remember { EditorViewModel() }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val annotatedString = remember(viewModel.fileText.text) { viewModel.getMarkdownAnnotatedString(viewModel.fileText.text) }
 
     LaunchedEffect(appState.file) {
         if (appState.file == null)
             return@LaunchedEffect
 
-        viewModel.showTextField = false
         viewModel.readFile(appState.file)
-
-        /**
-         * Tiny delay required to recreate the composable by hiding and showing, thus clearing the undo queue in text field.
-         * Maybe there is a better way to clear it in a future compose version?
-         */
-        delay(1)
-        viewModel.showTextField = true
     }
 
-    LaunchedEffect(viewModel.fileOriginalText, viewModel.fileText) {
-        viewModel.updateUnsavedChanges()
+    LaunchedEffect(viewModel.editorState.undoState.canUndo) {
+        appState.unsavedChanges = viewModel.editorState.undoState.canUndo
     }
 
     LaunchedEffect(Unit) {
@@ -92,80 +74,52 @@ fun Editor(appState: ApplicationState) {
             /**
              * Editor Text Field
              */
-            if (viewModel.showTextField) {
-                Box(modifier = Modifier.fillMaxSize().padding(bottom = 30.dp)) {
-                    BasicTextField(
-                        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState),
-                        value = viewModel.fileText,
-                        onValueChange = { viewModel.fileText = it },
-                        textStyle = LocalTextStyle.current.copy(
-                            color = MaterialTheme.colors.primary,
-                            fontSize = appState.editorFontSize.sp,
-                            lineHeight = (appState.editorFontSize * 1.75f).sp,
-                            fontFamily = FontFamily.Monospace,
-                        ),
-                        cursorBrush = SolidColor(MaterialTheme.colors.primary),
-                        visualTransformation = {
-                            TransformedText(
-                                text = annotatedString,
-                                offsetMapping = OffsetMapping.Identity
-                            )
-                        },
-                        onTextLayout = {
-                            viewModel.textLayoutResult = it
-                        },
-                        decorationBox = { innerTextField ->
-                            /**
-                             * Pointer input capture box for catching annotated urls.
-                             * Only active when CTRL is pressed in application.
-                             */
-                            if (appState.isCtrlPressed) {
-                                Box(modifier = Modifier.pointerHoverIcon(viewModel.pointerIcon).onPointerEvent(PointerEventType.Move) { event ->
-                                    viewModel.textLayoutResult?.let { layout ->
-                                        val position = layout.getOffsetForPosition(event.changes.first().position)
-                                        val annotation = annotatedString.getStringAnnotations(position, position).firstOrNull()
-                                        if (annotation?.tag == "URL") {
-                                            viewModel.pointerIcon = PointerIcon.Hand
-                                        } else {
-                                            viewModel.pointerIcon = PointerIcon.Default
-                                        }
-                                    }
-                                }.pointerInput(Unit) {
-                                    detectTapGestures { offset ->
-                                        viewModel.textLayoutResult?.let { layout ->
-                                            val position = layout.getOffsetForPosition(offset)
-                                            annotatedString.getStringAnnotations(position, position).firstOrNull()?.let { annotation ->
-                                                if (annotation.tag == "URL") {
-                                                    viewModel.openInBrowser(annotation.item)
-                                                    appState.isCtrlPressed = false
-                                                }
-                                            }
-                                        }
-                                    }
-                                })
-                            }
-                            innerTextField()
-                        }
+            Box(modifier = Modifier.fillMaxSize().padding(bottom = 30.dp)) {
+                BasicTextField(
+                    modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState),
+                    state = viewModel.editorState,
+                    textStyle = LocalTextStyle.current.copy(
+                        color = MaterialTheme.colors.onSurface,
+                        fontSize = appState.editorFontSize.sp,
+                        lineHeight = (appState.editorFontSize * 1.75f).sp,
+                        fontFamily = FontFamily.Monospace,
+                    ),
+                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                    onTextLayout = {
+                        viewModel.textLayoutResult = it.invoke()
+                    }
+                )
+                VerticalScrollbar(
+                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                    adapter = rememberScrollbarAdapter(scrollState),
+                    style = LocalScrollbarStyle.current.copy(
+                        shape = RectangleShape
                     )
-                    VerticalScrollbar(
-                        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                        adapter = rememberScrollbarAdapter(scrollState),
-                        style = LocalScrollbarStyle.current.copy(
-                            shape = RectangleShape
-                        )
-                    )
-                }
+                )
             }
             /**
              * Editor Status Bar
              */
             Box(modifier = Modifier.fillMaxWidth().height(30.dp).align(Alignment.BottomCenter).background(MaterialTheme.colors.background).padding(horizontal = 8.dp, vertical = 2.dp)) {
-                Row(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd)) {
-                    Text(
-                        text = if (viewModel.fileText.selection.length > 0) "${viewModel.fileText.text.length} characters (${viewModel.fileText.selection.length} selected)" else "${viewModel.fileText.text.length} characters",
-                        fontSize = 12.sp,
-                        maxLines = 1,
-                    )
+                Row(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
+                    if (!viewModel.isReading) {
+                        Text(
+                            text = if (viewModel.editorState.selection.length > 0) "${viewModel.editorState.text.length} characters (${viewModel.editorState.selection.length} selected)" else "${viewModel.editorState.text.length} characters",
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                        )
+                    } else {
+                        Text(
+                            text = "Reading File...",
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
                 }
             }
         }
