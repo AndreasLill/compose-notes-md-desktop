@@ -30,6 +30,7 @@ class EditorViewModel {
     private val colorDivider by mutableStateOf(Color(0xFFFAFAFA))
 
     var editorState by mutableStateOf(TextFieldState("text"))
+    var originalText by mutableStateOf("")
     var textLayoutResult by mutableStateOf<TextLayoutResult?>(null)
     var isReading by mutableStateOf(false)
 
@@ -58,6 +59,7 @@ class EditorViewModel {
                     editorState.setTextAndPlaceCursorAtEnd(builder.toString())
                 },
                 onDone = {
+                    originalText = editorState.text.toString()
                     isReading = false
                 }
             )
@@ -67,6 +69,7 @@ class EditorViewModel {
     suspend fun saveChanges(path: Path?) {
         path?.let {
             FileHandler.saveFile(it, editorState.text.toString())
+            originalText = editorState.text.toString()
         }
     }
 

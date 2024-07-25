@@ -21,7 +21,6 @@ import application.model.ApplicationState
 import editor.model.EditorViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Editor(appState: ApplicationState) {
     val viewModel = remember { EditorViewModel() }
@@ -35,8 +34,8 @@ fun Editor(appState: ApplicationState) {
         viewModel.readFile(appState.file)
     }
 
-    LaunchedEffect(viewModel.editorState.undoState.canUndo) {
-        appState.unsavedChanges = viewModel.editorState.undoState.canUndo
+    LaunchedEffect(viewModel.originalText, viewModel.editorState.text) {
+        appState.unsavedChanges = viewModel.originalText != viewModel.editorState.text
     }
 
     LaunchedEffect(Unit) {
