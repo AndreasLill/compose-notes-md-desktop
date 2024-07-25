@@ -3,6 +3,7 @@ package editor.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.selectAll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,7 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.substring
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import application.model.Action
@@ -26,6 +30,7 @@ fun Editor(appState: ApplicationState) {
     val viewModel = remember { EditorViewModel() }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    val clipboard = LocalClipboardManager.current
 
     LaunchedEffect(appState.file) {
         if (appState.file == null)
@@ -74,18 +79,40 @@ fun Editor(appState: ApplicationState) {
              * Editor Text Field
              */
             Box(modifier = Modifier.fillMaxSize().padding(bottom = 30.dp)) {
-                BasicTextField(
-                    modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState),
-                    state = viewModel.editorState,
-                    textStyle = LocalTextStyle.current.copy(
-                        color = MaterialTheme.colors.onSurface,
-                        fontSize = appState.editorFontSize.sp,
-                        lineHeight = (appState.editorFontSize * 1.75f).sp,
-                        fontFamily = FontFamily.Monospace,
-                    ),
-                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
-                    onTextLayout = {
-                        viewModel.textLayoutResult = it.invoke()
+                ContextMenuArea(
+                    items = {
+                        listOf(
+                            ContextMenuItem(
+                                label = "Copy",
+                                onClick = {
+                                    clipboard.setText(AnnotatedString(viewModel.editorState.text.substring(viewModel.editorState.selection)))
+                                },
+                            ),
+                            ContextMenuItem(
+                                label = "Select All",
+                                onClick = {
+                                    viewModel.editorState.edit {
+                                        selectAll()
+                                    }
+                                },
+                            ),
+                        )
+                    },
+                    content = {
+                        BasicTextField(
+                            modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState),
+                            state = viewModel.editorState,
+                            textStyle = LocalTextStyle.current.copy(
+                                color = MaterialTheme.colors.onSurface,
+                                fontSize = appState.editorFontSize.sp,
+                                lineHeight = (appState.editorFontSize * 1.75f).sp,
+                                fontFamily = FontFamily.Monospace,
+                            ),
+                            cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                            onTextLayout = {
+                                viewModel.textLayoutResult = it.invoke()
+                            }
+                        )
                     }
                 )
                 VerticalScrollbar(
