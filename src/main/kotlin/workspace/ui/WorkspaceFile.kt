@@ -4,8 +4,12 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.selectAll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -18,15 +22,13 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.composenotesmd.desktop.composenotesmd.generated.resources.*
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.Res
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.arrow_down_24dp
 import com.example.composenotesmd.desktop.composenotesmd.generated.resources.arrow_right_24dp
+import com.example.composenotesmd.desktop.composenotesmd.generated.resources.text_file_24dp
 import org.jetbrains.compose.resources.painterResource
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
@@ -47,8 +49,8 @@ fun WorkspaceFile(
     onRename: (String) -> Unit,
     onDelete: () -> Unit
 ) {
+    val textFieldState by remember(path) { mutableStateOf(TextFieldState(path.fileName.toString())) }
     val isRenaming = remember { mutableStateOf(false) }
-    val textField = remember(path) { mutableStateOf(TextFieldValue(path.fileName.toString())) }
     val focusRequester = remember { FocusRequester() }
     val contextMenuState = remember { ContextMenuState() }
 
@@ -73,7 +75,9 @@ fun WorkspaceFile(
                     onClick = {
                         onBeginRename()
                         isRenaming.value = true
-                        textField.value = TextFieldValue(textField.value.text, TextRange(0, textField.value.text.length))
+                        textFieldState.edit {
+                            selectAll()
+                        }
                         focusRequester.requestFocus()
                     },
                 ),
@@ -109,15 +113,22 @@ fun WorkspaceFile(
                             )
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
                                 BasicTextField(
-                                    modifier = Modifier.focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
+                                    modifier = Modifier.focusable(false).focusRequester(focusRequester).pointerHoverIcon(if (isRenaming.value) PointerIcon.Text else PointerIcon.Default, true).onFocusChanged {
                                         if (!it.isFocused) {
-                                            textField.value = TextFieldValue(path.fileName.toString())
+                                            textFieldState.edit {
+                                                revertAllChanges()
+                                            }
                                             isRenaming.value = false
                                         }
                                     }.onPreviewKeyEvent {
                                         if (it.key == Key.Enter && it.type == KeyEventType.KeyUp && isRenaming.value) {
-                                            onRename(textField.value.text)
-                                            textField.value = TextFieldValue(textField.value.text)
+                                            onRename(textFieldState.text.toString())
+                                            isRenaming.value = false
+                                        }
+                                        if (it.key == Key.Escape && it.type == KeyEventType.KeyUp && isRenaming.value) {
+                                            textFieldState.edit {
+                                                revertAllChanges()
+                                            }
                                             isRenaming.value = false
                                         }
                                         false
@@ -129,10 +140,9 @@ fun WorkspaceFile(
                                             Modifier.width(0.dp)
                                         }
                                     ),
+                                    state = textFieldState,
                                     readOnly = !isRenaming.value,
-                                    value = textField.value,
-                                    onValueChange = { textField.value = it },
-                                    singleLine = true,
+                                    lineLimits = TextFieldLineLimits.SingleLine,
                                     cursorBrush = SolidColor(MaterialTheme.colors.primary),
                                     textStyle = LocalTextStyle.current.copy(
                                         color = if (isOpenFile || isRenaming.value) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
@@ -141,7 +151,7 @@ fun WorkspaceFile(
                                 )
                                 if (!isRenaming.value) {
                                     Text(
-                                        text = if (unsavedChanges) "${textField.value.text}*" else textField.value.text,
+                                        text = if (unsavedChanges) "${textFieldState.text}*" else textFieldState.text.toString(),
                                         color = if (isOpenFile) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
                                         fontSize = 13.sp,
                                         maxLines = 1,

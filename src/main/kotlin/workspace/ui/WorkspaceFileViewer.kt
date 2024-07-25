@@ -93,7 +93,11 @@ fun WorkspaceFileViewer(appState: ApplicationState)  {
                     )
                 },
                 content = {
-                    Box(modifier = Modifier.fillMaxSize())
+                    Box(modifier = Modifier.fillMaxSize().clickable(
+                        onClick = {},
+                        interactionSource = null,
+                        indication = null
+                    ))
                 }
             )
             /**
