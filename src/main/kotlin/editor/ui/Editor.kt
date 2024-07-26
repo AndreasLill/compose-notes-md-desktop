@@ -5,10 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.selectAll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -31,6 +28,7 @@ fun Editor(appState: ApplicationState) {
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val clipboard = LocalClipboardManager.current
+    val annotatedString = remember(viewModel.editorState.text) { viewModel.getMarkdownAnnotatedString(viewModel.editorState.text.toString()) }
 
     LaunchedEffect(appState.file) {
         if (appState.file == null)
@@ -103,7 +101,7 @@ fun Editor(appState: ApplicationState) {
                             modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState),
                             state = viewModel.editorState,
                             textStyle = LocalTextStyle.current.copy(
-                                color = MaterialTheme.colors.onSurface,
+                                color = MaterialTheme.colors.onSurface.copy(0f),
                                 fontSize = appState.editorFontSize.sp,
                                 lineHeight = (appState.editorFontSize * 1.75f).sp,
                                 fontFamily = FontFamily.Monospace,
@@ -111,6 +109,16 @@ fun Editor(appState: ApplicationState) {
                             cursorBrush = SolidColor(MaterialTheme.colors.primary),
                             onTextLayout = {
                                 viewModel.textLayoutResult = it.invoke()
+                            },
+                            decorator = { innerTextField ->
+                                Text(
+                                    text = annotatedString,
+                                    color = MaterialTheme.colors.primary,
+                                    fontSize = appState.editorFontSize.sp,
+                                    lineHeight = (appState.editorFontSize * 1.75f).sp,
+                                    fontFamily = FontFamily.Monospace,
+                                )
+                                innerTextField()
                             }
                         )
                     }

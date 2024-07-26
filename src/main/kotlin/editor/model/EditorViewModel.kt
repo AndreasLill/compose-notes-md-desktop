@@ -14,8 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import application.io.FileHandler
-import java.awt.Desktop
-import java.net.URI
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.nio.file.Path
 
 class EditorViewModel {
@@ -73,73 +74,75 @@ class EditorViewModel {
         }
     }
 
-    fun openInBrowser(uri: String) {
+    /*fun openInBrowser(uri: String) {
         Desktop.getDesktop().browse(URI(uri))
-    }
+    }*/
 
     /**
      * Translates markdown source text to annotated string format used by text field.
      */
-    fun getMarkdownAnnotatedString(text: String): AnnotatedString {
-        val builder = AnnotatedString.Builder()
-        val lines = text.lines()
+    fun getMarkdownAnnotatedString(text: String): AnnotatedString = runBlocking {
+        withContext(Dispatchers.IO) {
+            val builder = AnnotatedString.Builder()
+            val lines = text.lines()
 
-        lines.forEachIndexed { index, line ->
-            when {
-                /**
-                 * Header
-                 */
-                REGEX_HEADER.containsMatchIn(line) -> {
-                    buildLineAnnotations(builder, SpanStyle(colorHeader), line)
-                }
-                /**
-                 * Divider
-                 */
-                REGEX_DIVIDER.containsMatchIn(line) -> {
-                    builder.withStyle(SpanStyle(colorDivider)) {
-                        builder.append(line)
+            lines.forEachIndexed { index, line ->
+                when {
+                    /**
+                     * Header
+                     */
+                    REGEX_HEADER.containsMatchIn(line) -> {
+                        buildLineAnnotations(builder, SpanStyle(colorHeader), line)
+                    }
+                    /**
+                     * Divider
+                     */
+                    REGEX_DIVIDER.containsMatchIn(line) -> {
+                        builder.withStyle(SpanStyle(colorDivider)) {
+                            builder.append(line)
+                        }
+                    }
+                    /**
+                     * Unordered List
+                     */
+                    REGEX_UNORDERED_LIST.containsMatchIn(line) -> {
+                        builder.withStyle(SpanStyle(colorList)) {
+                            builder.append(line.substring(0, 1))
+                        }
+                        buildLineAnnotations(builder, SpanStyle(colorText), line.substring(1))
+                    }
+                    /**
+                     * Ordered List
+                     */
+                    REGEX_ORDERED_LIST.containsMatchIn(line) -> {
+                        builder.withStyle(SpanStyle(colorList)) {
+                            builder.append(line.substring(0, 2))
+                        }
+                        buildLineAnnotations(builder, SpanStyle(colorText), line.substring(2))
+                    }
+                    /**
+                     * Block Quote
+                     */
+                    REGEX_BLOCK_QUOTE.containsMatchIn(line) -> {
+                        builder.withStyle(SpanStyle(colorBlockQuote)) {
+                            builder.append(line.substring(0, 1))
+                        }
+                        buildLineAnnotations(builder, SpanStyle(colorText), line.substring(1))
+                    }
+                    else -> {
+                        buildLineAnnotations(builder, SpanStyle(colorText), line)
                     }
                 }
-                /**
-                 * Unordered List
-                 */
-                REGEX_UNORDERED_LIST.containsMatchIn(line) -> {
-                    builder.withStyle(SpanStyle(colorList)) {
-                        builder.append(line.substring(0, 1))
-                    }
-                    buildLineAnnotations(builder, SpanStyle(colorText), line.substring(1))
-                }
-                /**
-                 * Ordered List
-                 */
-                REGEX_ORDERED_LIST.containsMatchIn(line) -> {
-                    builder.withStyle(SpanStyle(colorList)) {
-                        builder.append(line.substring(0, 2))
-                    }
-                    buildLineAnnotations(builder, SpanStyle(colorText), line.substring(2))
-                }
-                /**
-                 * Block Quote
-                 */
-                REGEX_BLOCK_QUOTE.containsMatchIn(line) -> {
-                    builder.withStyle(SpanStyle(colorBlockQuote)) {
-                        builder.append(line.substring(0, 1))
-                    }
-                    buildLineAnnotations(builder, SpanStyle(colorText), line.substring(1))
-                }
-                else -> {
-                    buildLineAnnotations(builder, SpanStyle(colorText), line)
-                }
+
+                if (index < lines.size - 1)
+                    builder.append("\n")
             }
 
-            if (index < lines.size - 1)
-                builder.append("\n")
+            return@withContext builder.toAnnotatedString()
         }
-
-        return builder.toAnnotatedString()
     }
 
-    private fun buildLineAnnotations(builder: AnnotatedString.Builder, baseStyle: SpanStyle, line: String) {
+    private suspend fun buildLineAnnotations(builder: AnnotatedString.Builder, baseStyle: SpanStyle, line: String) = withContext(Dispatchers.Default) {
         val matches = REGEX_GROUPS.findAll(line).toList().sortedBy { it.range.first }
 
         if (matches.isNotEmpty()) {
